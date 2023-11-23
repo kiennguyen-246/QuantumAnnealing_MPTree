@@ -323,9 +323,10 @@ def fowler(g, terminals,
         offset = 0
         for (u, v) in edgeListRootSepc:
             if (u >= v): continue
+            if (u == root): continue
             q[(get("e", u, v), get("e", u, v))] += A
             q[(get("e", u, v), get("x", u, v))] -= A
-            q[(get("e", v, u), get("x", u, v))] -= A
+            q[(get("e", v, u), get("x", u, v))] += A
         return {
             "q": q,
             "offset": offset
@@ -348,109 +349,185 @@ def fowler(g, terminals,
             "offset": offset
         }
 
-    #
-    # def objective():
-    #     q = defaultdict(int)
-    #     offset = 0
-    #     for (u, v) in edgeList:
-    #         for i in range(1, maxDepth):
-    #             q[(get("xe", i, u, v), get("xe", i, u, v))] += B * g[u][v]['weight']
-    #     return {
-    #         "q": q,
-    #         "offset": offset
-    #     }
-    #
-    # # Add constraints and objective function to the QUBO
-    # q = addQubo(q1=q, q2=constraint1()["q"], size=qSize)
-    # offset += constraint1()["offset"]
-    # q = addQubo(q1=q, q2=constraint2()["q"], size=qSize)
-    # offset += constraint2()["offset"]
-    # q = addQubo(q1=q, q2=constraint3()["q"], size=qSize)
-    # offset += constraint3()["offset"]
-    # q = addQubo(q1=q, q2=constraint4()["q"], size=qSize)
-    # offset += constraint4()["offset"]
-    # q = addQubo(q1=q, q2=constraint5()["q"], size=qSize)
-    # offset += constraint5()["offset"]
-    # q = addQubo(q1=q, q2=constraint6()["q"], size=qSize)
-    # offset += constraint6()["offset"]
-    # q = addQubo(q1=q, q2=objective()["q"], size=qSize)
-    # offset += objective()["offset"]
-    #
-    # # Solve QUBO with D-Wave
-    # chainStrength = uniform_torque_compensation(
-    #     bqm=BinaryQuadraticModel.from_qubo(q), prefactor=chainStrengthPrefactor)
-    # sampler = EmbeddingComposite(DWaveSampler())
-    # response = sampler.sample_qubo(q,
-    #                                chain_strength=chainStrength,
-    #                                num_reads=numReads,
-    #                                label='Steiner Tree Soltuion',
-    #                                annealing_time=annealing_time)
+    def constraint4():
+        """
+        Non-terminals must have no more than 1 incoming edge
+        """
+        q = defaultdict(int)
+        offset = 0
+        for v in range(0, n):
+            if (v in terminals):
+                continue
+            for u in g.adj[v]:
+                for w in g.adj[v]:
+                    if (u == w): continue
+                    q[(get("e", u, v), get("e", w, v))] += A * n
+        return {
+            "q": q,
+            "offset": offset
+        }
+
+    def constraint5():
+        """
+        Non-terminals cannot be DAG root
+        """
+        q = defaultdict(int)
+        offset = 0
+        for v in range(0, n):
+            if (v in terminals):
+                continue
+            coef1 = [0] * qSize
+            coef2 = [0] * qSize
+            for u in g.adj[v]:
+                coef1[get("e", u, v)] -= 1
+            freeCoef1 = 1
+            for u in g.adj[v]:
+                if (u == root): continue
+                coef2[get("e", v, u)] += 1
+            q = addQubo(q1=q, q2=mul(coef1=coef1, freeCoef1=freeCoef1,
+                                     coef2=coef2,
+                                     size=qSize, __lambda=A)["q"], size=qSize)
+            offset += mul(coef1=coef1, freeCoef1=freeCoef1,
+                            coef2=coef2,
+                            size=qSize, __lambda=A)["offset"]
+        return {
+            "q": q,
+            "offset": offset
+        }
+
+    def objective():
+        """See paper"""
+        q = defaultdict(int)
+        offset = 0
+        for (u, v) in edgeListRootSepc:
+            q[(get("e", u, v), get("e", u, v))] += B * g[u][v]['weight']
+
+        return {
+            "q": q,
+            "offset": offset
+        }
+
+    # Add constraints and objective function to the QUBO
+    q = addQubo(q1=q, q2=constraint1()["q"], size=qSize)
+    offset += constraint1()["offset"]
+    q = addQubo(q1=q, q2=constraint2()["q"], size=qSize)
+    offset += constraint2()["offset"]
+    q = addQubo(q1=q, q2=constraint3()["q"], size=qSize)
+    offset += constraint3()["offset"]
+    q = addQubo(q1=q, q2=constraint4()["q"], size=qSize)
+    offset += constraint4()["offset"]
+    q = addQubo(q1=q, q2=constraint5()["q"], size=qSize)
+    offset += constraint5()["offset"]
+    q = addQubo(q1=q, q2=objective()["q"], size=qSize)
+    offset += objective()["offset"]
+
+    # x = [1, 0, 1, 0, 0, 0,
+    #      1, 1, 0,
+    #      1, 0,
+    #      0]
+    # x = [0, 1, 0, 0, 0, 1,
+    #      0, 1, 1,
+    #      1, 1,
+    #      0]
+
+    # x = [0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 1,
+    #      1, 0, 0, 0, 1,
+    #      0, 0, 0, 0,
+    #      0, 0, 1,
+    #      0, 1,
+    #      1]
+
+    # # print("Energy is {}".format(calculate(q, offset, x=x)))
+    # print("Penalty 1 is {}".format(calculate(q=constraint1()["q"], offset=constraint1()["offset"], x=x)))
+    # print("Penalty 2 is {}".format(calculate(q=constraint2()["q"], offset=constraint2()["offset"], x=x)))
+    # print("Penalty 3 is {}".format(calculate(q=constraint3()["q"], offset=constraint3()["offset"], x=x)))
+    # print("Penalty 4 is {}".format(calculate(q=constraint4()["q"], offset=constraint4()["offset"], x=x)))
+    # print("Penalty 5 is {}".format(calculate(q=constraint5()["q"], offset=constraint5()["offset"], x=x)))
+    # print("Objective is {}".format(calculate(q=objective()["q"], offset=objective()["offset"], x=x)))
+
+    # Solve QUBO with D-Wave
+    chainStrength = uniform_torque_compensation(
+        bqm=BinaryQuadraticModel.from_qubo(q), prefactor=chainStrengthPrefactor)
+    sampler = EmbeddingComposite(DWaveSampler())
+    response = sampler.sample_qubo(q,
+                                   chain_strength=chainStrength,
+                                   num_reads=numReads,
+                                   label='Steiner Tree Soltuion',
+                                   annealing_time=annealing_time)
     # dwave.inspector.show(response)
-    #
-    # reportFile.write("## Result\n")
-    # reportTable(reportFile=reportFile, response=response)
-    # success = 0
-    # sample = response.record.sample[0]
-    # result = response.record.energy[0] + offset
-    # for i in range(0, len(response.record.sample)):
-    #     if (response.record.energy[i] + offset < result):
-    #         sample = response.record.sample[i]
-    #         result = response.record.energy[i] + offset
-    #         success = 1
-    #     elif (response.record.energy[i] + offset == result):
-    #         success += response.record.num_occurrences[i]
-    #
-    # print(len(sample))
-    # penalty1 = calculate(q=constraint1()["q"], offset=constraint1()["offset"], x=sample)
-    # penalty2 = calculate(q=constraint2()["q"], offset=constraint2()["offset"], x=sample)
-    # penalty3 = calculate(q=constraint3()["q"], offset=constraint3()["offset"], x=sample)
-    # penalty4 = calculate(q=constraint4()["q"], offset=constraint4()["offset"], x=sample)
-    # penalty5 = calculate(q=constraint5()["q"], offset=constraint5()["offset"], x=sample)
-    # penalty6 = calculate(q=constraint6()["q"], offset=constraint6()["offset"], x=sample)
-    # print("Penalty 1: {}".format(penalty1))
-    # print("Penalty 2: {}".format(penalty2))
-    # print("Penalty 3: {}".format(penalty3))
-    # print("Penalty 4: {}".format(penalty4))
-    # print("Penalty 5: {}".format(penalty5))
-    # print("Penalty 6: {}".format(penalty6))
-    # objectiveVal = calculate(q=objective()["q"], offset=objective()["offset"], x=sample)
-    # if (penalty1 != 0
-    #         or penalty2 != 0
-    #         or penalty3 != 0
-    #         or penalty4 != 0
-    #         or penalty5 != 0
-    #         or penalty6 != 0):
-    #     print("Cannot find a Steiner tree in the given graph. Energy is {}".format(result))
-    # else:
-    #     print("Minimum Steiner tree found with total weight = {}".format(result))
-    # print("Included edges:")
-    # ans = []
-    # for (u, v) in udiEdgeList:
-    #     if (sample[get("ye", param1=u, param2=v)] == 1):
-    #         print("({}, {})".format(u, v))
-    #         ans.append((u, v))
-    # if (result != 15):
-    #     success = 0
-    # print("Success rate: {}/{}".format(success, numReads))
-    #
-    # return {
-    #     "ans": ans,
-    #     "success_rate": success,
-    # }
 
+    reportFile.write("## Result\n")
+    reportTable(reportFile=reportFile, response=response)
+    success = 0
+    sample = response.record.sample[0]
+    result = response.record.energy[0] + offset
+    for i in range(0, len(response.record.sample)):
+        if (response.record.energy[i] + offset < result):
+            sample = response.record.sample[i]
+            result = response.record.energy[i] + offset
+            success = 1
+        elif (response.record.energy[i] + offset == result):
+            success += response.record.num_occurrences[i]
 
-g = nx.DiGraph()
-g.add_edge(0, 1, weight=5)
-g.add_edge(1, 0, weight=5)
-g.add_edge(1, 2, weight=10)
-g.add_edge(2, 1, weight=10)
-g.add_edge(0, 3, weight=2)
-g.add_edge(3, 0, weight=2)
-g.add_edge(3, 2, weight=20)
-g.add_edge(2, 3, weight=20)
-terminals = [0, 2]
-print(fowler(g=g, terminals=terminals,
-            numReads=1000,
-            __lambda=len(g.nodes) * max([g[u][v]['weight'] for (u, v) in g.edges]) + 1,
-            chainStrengthPrefactor=0.3,
-            annealing_time=200))
+    print(len(sample))
+    penalty1 = calculate(q=constraint1()["q"], offset=constraint1()["offset"], x=sample)
+    penalty2 = calculate(q=constraint2()["q"], offset=constraint2()["offset"], x=sample)
+    penalty3 = calculate(q=constraint3()["q"], offset=constraint3()["offset"], x=sample)
+    penalty4 = calculate(q=constraint4()["q"], offset=constraint4()["offset"], x=sample)
+    penalty5 = calculate(q=constraint5()["q"], offset=constraint5()["offset"], x=sample)
+    print("Penalty 1: {}".format(penalty1))
+    print("Penalty 2: {}".format(penalty2))
+    print("Penalty 3: {}".format(penalty3))
+    print("Penalty 4: {}".format(penalty4))
+    print("Penalty 5: {}".format(penalty5))
+    objectiveVal = calculate(q=objective()["q"], offset=objective()["offset"], x=sample)
+    if (penalty1 != 0
+            or penalty2 != 0
+            or penalty3 != 0
+            or penalty4 != 0
+            or penalty5 != 0):
+        print("Cannot find a Steiner tree in the given graph. Energy is {}".format(result))
+    else:
+        print("Minimum Steiner tree found with total weight = {}".format(result))
+    print("Included edges:")
+    ans = []
+    for (u, v) in edgeListRootSepc:
+        if (sample[get("e", u, v)] == 1):
+            print("({}, {})".format(u, v))
+            ans.append((u, v))
+    if (result != 15):
+        success = 0
+    print("Success rate: {}/{}".format(success, numReads))
+
+    return {
+        "ans": ans,
+        "success_rate": success,
+    }
+
+def readInput(file):
+    with open(file) as f:
+        line = f.readline()
+        n = int(line.split()[0])
+        m = int(line.split()[1])
+        g = nx.DiGraph()
+        for i in range(0, m):
+            line = f.readline()
+            u = int(line.split()[0])
+            v = int(line.split()[1])
+            w = int(line.split()[2])
+            g.add_edge(u, v, weight=w)
+            g.add_edge(v, u, weight=w)
+        line = f.readline()
+        k = int(line)
+        terminals = []
+        line = f.readline()
+        for i in range(0, k):
+            terminals.append(int(line.split()[i]))
+    return g, terminals
+
+# g, terminals = readInput("steiner.inp")
+# print(fowler(g=g, terminals=terminals,
+#             numReads=1000,
+#             __lambda=len(g.nodes) * max([g[u][v]['weight'] for (u, v) in g.edges]) + 1,
+#             chainStrengthPrefactor=0.3,
+#             annealing_time=200))

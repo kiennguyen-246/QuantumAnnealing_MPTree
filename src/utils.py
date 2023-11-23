@@ -22,7 +22,7 @@ def addQubo(q1=defaultdict, q2=defaultdict, size=0):
             q1[(i, j)] += q2[(i, j)]
     return q1
 
-def mul(coef1=[], freeCoef1=0, coef2=[], freeCoef2=[], size=0, __lambda=1):
+def mul(coef1=[], freeCoef1=0, coef2=[], freeCoef2=0, size=0, __lambda=1):
     """
     Multiply two linear terms.
     """
@@ -31,9 +31,9 @@ def mul(coef1=[], freeCoef1=0, coef2=[], freeCoef2=[], size=0, __lambda=1):
         for j in range(0, size):
             q[(i, j)] += __lambda * coef1[i] * coef2[j]
     for i in range(0, size):
-        q[(i, i)] += __lambda * coef1[i] * freeCoef2[i]
+        q[(i, i)] += __lambda * coef1[i] * freeCoef2
     for i in range(0, size):
-        q[(i, i)] += __lambda* freeCoef1 * coef2[i]
+        q[(i, i)] += __lambda * freeCoef1 * coef2[i]
     return {
         "q": q,
         "offset": __lambda * freeCoef1 * freeCoef2
