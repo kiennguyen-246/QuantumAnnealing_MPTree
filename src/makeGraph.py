@@ -1,10 +1,15 @@
 import networkx as nx
-from steinerTree import lucas
+from steinerTree import lucas, fowler
 
 
 def makeGraph(v_e_list=None,
               seqList=None,
               terminals=None):
+    copy = []
+    for i in range(0, len(seqList)):
+        if (seqList[i] not in copy):
+            copy.append(seqList[i])
+    seqList = copy
     if v_e_list is not None:
         g = nx.DiGraph()
         for i in v_e_list:
@@ -29,7 +34,7 @@ def getAns(v_e_list=None,
 
     print(g)
     print(terminals)
-    ans = lucas(g=g, terminals=terminals,
+    ans = fowler(g=g, terminals=terminals,
                 numReads=1000,
                 __lambda=1,
                 chainStrengthPrefactor=0.3,

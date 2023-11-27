@@ -2,6 +2,7 @@ from dwave.system.samplers import DWaveSampler
 from dwave.system.composites import EmbeddingComposite
 from dwave.embedding.chain_strength import uniform_torque_compensation
 from dimod.binary import BinaryQuadraticModel
+from neal import SimulatedAnnealingSampler
 import dwave.inspector
 from utils import *
 
@@ -275,20 +276,25 @@ def fowler(g, terminals,
     B = 1
     A = __lambda * B
 
+    varMap = []
+    for (u, v) in edgeListRootSepc:
+        varMap.append(("e", u, v))
+    for u in range(0, n):
+        for v in range(u + 1, n):
+            if (u != root and v != root):
+                varMap.append(("x", u, v))
+
     # Get the position of a variable in the QUBO
     def get(var="e", param1=0, param2=0):
         """
         e[u][v]: edge (u, v) in the DAG created by chosen edges
         x[u][v]: u appears before v in the DAG's topology order
         """
-        if (var == "e"):
-            return edgeListRootSepc.index((param1, param2))
-        if (var == "x"):
-            return m1 + (2 * n - param1 - 1) * param1 // 2 + (param2 - param1 - 1)
+        return varMap.index((var, param1, param2))
 
     # Generate QUBO
     q = defaultdict(int)
-    qSize = m1 + n * (n - 1) // 2
+    qSize = m1 + n * (n - 1) // 2 - n + 1
     offset = 0
 
     def constraint1():
@@ -306,6 +312,7 @@ def fowler(g, terminals,
         for u in range(0, n):
             for v in range(u + 1, n):
                 for w in range(v + 1, n):
+                    if (u == root or v == root or w == root): continue
                     q[(get("x", u, w), get("x", u, w))] += A
                     q[(get("x", u, v), get("x", v, w))] += A
                     q[(get("x", u, v), get("x", u, w))] -= A
@@ -323,7 +330,7 @@ def fowler(g, terminals,
         offset = 0
         for (u, v) in edgeListRootSepc:
             if (u >= v): continue
-            if (u == root): continue
+            if (u == root or v == root): continue
             q[(get("e", u, v), get("e", u, v))] += A
             q[(get("e", u, v), get("x", u, v))] -= A
             q[(get("e", v, u), get("x", u, v))] += A
@@ -421,30 +428,6 @@ def fowler(g, terminals,
     q = addQubo(q1=q, q2=objective()["q"], size=qSize)
     offset += objective()["offset"]
 
-    # x = [1, 0, 1, 0, 0, 0,
-    #      1, 1, 0,
-    #      1, 0,
-    #      0]
-    # x = [0, 1, 0, 0, 0, 1,
-    #      0, 1, 1,
-    #      1, 1,
-    #      0]
-
-    # x = [0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 1,
-    #      1, 0, 0, 0, 1,
-    #      0, 0, 0, 0,
-    #      0, 0, 1,
-    #      0, 1,
-    #      1]
-
-    # # print("Energy is {}".format(calculate(q, offset, x=x)))
-    # print("Penalty 1 is {}".format(calculate(q=constraint1()["q"], offset=constraint1()["offset"], x=x)))
-    # print("Penalty 2 is {}".format(calculate(q=constraint2()["q"], offset=constraint2()["offset"], x=x)))
-    # print("Penalty 3 is {}".format(calculate(q=constraint3()["q"], offset=constraint3()["offset"], x=x)))
-    # print("Penalty 4 is {}".format(calculate(q=constraint4()["q"], offset=constraint4()["offset"], x=x)))
-    # print("Penalty 5 is {}".format(calculate(q=constraint5()["q"], offset=constraint5()["offset"], x=x)))
-    # print("Objective is {}".format(calculate(q=objective()["q"], offset=objective()["offset"], x=x)))
-
     # Solve QUBO with D-Wave
     chainStrength = uniform_torque_compensation(
         bqm=BinaryQuadraticModel.from_qubo(q), prefactor=chainStrengthPrefactor)
@@ -454,20 +437,37 @@ def fowler(g, terminals,
                                    num_reads=numReads,
                                    label='Steiner Tree Soltuion',
                                    annealing_time=annealing_time)
-    # dwave.inspector.show(response)
+    dwave.inspector.show(response)
 
+    # # Solve QUBO with Simulated Annealing
+    # sampler = SimulatedAnnealingSampler()
+    # response = sampler.sample_qubo(q,
+    #                                num_reads=numReads,
+    #                                label='Steiner Tree Soltuion',
+    #                                beta_range=[0.1, 4],
+    #                                num_sweeps=1000)
+
+    # Analyze result
     reportFile.write("## Result\n")
     reportTable(reportFile=reportFile, response=response)
     success = 0
+    optimal = 0
     sample = response.record.sample[0]
     result = response.record.energy[0] + offset
     for i in range(0, len(response.record.sample)):
+        curSample = response.record.sample[i]
+        if (calculate(q=constraint1()["q"], offset=constraint1()["offset"], x=curSample) == 0
+                and calculate(q=constraint2()["q"], offset=constraint2()["offset"], x=curSample) == 0
+                and calculate(q=constraint3()["q"], offset=constraint3()["offset"], x=curSample) == 0
+                and calculate(q=constraint4()["q"], offset=constraint4()["offset"], x=curSample) == 0
+                and calculate(q=constraint5()["q"], offset=constraint5()["offset"], x=curSample) == 0):
+            success += response.record.num_occurrences[i]
         if (response.record.energy[i] + offset < result):
             sample = response.record.sample[i]
             result = response.record.energy[i] + offset
-            success = 1
+            optimal = 1
         elif (response.record.energy[i] + offset == result):
-            success += response.record.num_occurrences[i]
+            optimal += response.record.num_occurrences[i]
 
     print(len(sample))
     penalty1 = calculate(q=constraint1()["q"], offset=constraint1()["offset"], x=sample)
@@ -495,13 +495,15 @@ def fowler(g, terminals,
         if (sample[get("e", u, v)] == 1):
             print("({}, {})".format(u, v))
             ans.append((u, v))
-    if (result != 15):
-        success = 0
-    print("Success rate: {}/{}".format(success, numReads))
+    if (result != 13):
+        optimal = 0
+    print("Steiner tree creation rate: {}/{}".format(success, numReads))
+    print("Optimal rate: {}/{}".format(optimal, numReads))
 
     return {
         "ans": ans,
         "success_rate": success,
+        "optimal_rate": optimal,
     }
 
 def readInput(file):
