@@ -437,7 +437,7 @@ def fowler(g, terminals,
                                    num_reads=numReads,
                                    label='Steiner Tree Soltuion',
                                    annealing_time=annealing_time)
-    dwave.inspector.show(response)
+    # dwave.inspector.show(response)
 
     # # Solve QUBO with Simulated Annealing
     # sampler = SimulatedAnnealingSampler()
