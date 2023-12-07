@@ -1,10 +1,12 @@
 from dwave.system.samplers import DWaveSampler
-from dwave.system.composites import EmbeddingComposite
+from dwave.system.composites import LazyFixedEmbeddingComposite
 from dwave.embedding.chain_strength import uniform_torque_compensation
 from dimod.binary import BinaryQuadraticModel
 from neal import SimulatedAnnealingSampler
 import dwave.inspector
 from utils import *
+import numpy as np
+from gekko import GEKKO
 
 
 def lucas(g, terminals,
@@ -103,8 +105,8 @@ def lucas(g, terminals,
             for i in range(0, maxDepth):
                 coef2[get(var="xv", depth=i, param1=v)] += 1
             coef2[get(var="yv", param1=v)] -= 1
-            q = addQubo(q1=q, q2=square(coef=coef2, size=qSize, __lambda=A)["q"], size=qSize)
-            offset += square(coef=coef2, size=qSize, __lambda=A)["offset"]
+            q = addQubo(q1=q, q2=square(coef=coef2, size=qSize, __lambda=5 * A)["q"], size=qSize)
+            offset += square(coef=coef2, size=qSize, __lambda=5 * A)["offset"]
         return {
             "q": q,
             "offset": offset
@@ -195,7 +197,7 @@ def lucas(g, terminals,
     # Solve QUBO with D-Wave
     chainStrength = uniform_torque_compensation(
         bqm=BinaryQuadraticModel.from_qubo(q), prefactor=chainStrengthPrefactor)
-    sampler = EmbeddingComposite(DWaveSampler())
+    sampler = LazyFixedEmbeddingComposite(DWaveSampler())
     response = sampler.sample_qubo(q,
                                    chain_strength=chainStrength,
                                    num_reads=numReads,
@@ -254,11 +256,12 @@ def lucas(g, terminals,
         "success_rate": success,
     }
 
-def fowler(g, terminals,
-          numReads=1000,
-          __lambda=1,
-          chainStrengthPrefactor=0.3,
-          annealing_time=200):
+
+def fowler(g, terminals, root=0,
+           numReads=1000,
+           __lambda=1,
+           chainStrengthPrefactor=0.3,
+           annealing_time=200):
     """
     https://www.researchgate.net/profile/Alex-Fowler/publication/322634540_Improved_QUBO_Formulations_for_D-Wave_Quantum_Computing/links/5a65547caca272a1581f2809/Improved-QUBO-Formulations-for-D-Wave-Quantum-Computing.pdf
     """
@@ -267,9 +270,9 @@ def fowler(g, terminals,
     n = len(g.nodes)
     m = len(g.edges)
     edgeList = list(g.edges)
-    root = terminals[0]
     edgeListRootSepc = list(filter(lambda x: x[1] != root, list(g.edges)))
     m1 = len(edgeListRootSepc)
+    # print(edgeList)
     print(edgeListRootSepc)
 
     # Hamiltonian parameters
@@ -313,10 +316,10 @@ def fowler(g, terminals,
             for v in range(u + 1, n):
                 for w in range(v + 1, n):
                     if (u == root or v == root or w == root): continue
-                    q[(get("x", u, w), get("x", u, w))] += A
-                    q[(get("x", u, v), get("x", v, w))] += A
-                    q[(get("x", u, v), get("x", u, w))] -= A
-                    q[(get("x", u, w), get("x", v, w))] -= A
+                    q[(get("x", u, w), get("x", u, w))] += 4 * A
+                    q[(get("x", u, v), get("x", v, w))] += 4 * A
+                    q[(get("x", u, v), get("x", u, w))] -= 4 * A
+                    q[(get("x", u, w), get("x", v, w))] -= 4 * A
         return {
             "q": q,
             "offset": offset
@@ -331,9 +334,9 @@ def fowler(g, terminals,
         for (u, v) in edgeListRootSepc:
             if (u >= v): continue
             if (u == root or v == root): continue
-            q[(get("e", u, v), get("e", u, v))] += A
-            q[(get("e", u, v), get("x", u, v))] -= A
-            q[(get("e", v, u), get("x", u, v))] += A
+            q[(get("e", u, v), get("e", u, v))] += 11 * A
+            q[(get("e", u, v), get("x", u, v))] -= 11 * A
+            q[(get("e", v, u), get("x", u, v))] += 11 * A
         return {
             "q": q,
             "offset": offset
@@ -345,12 +348,13 @@ def fowler(g, terminals,
         """
         q = defaultdict(int)
         offset = 0
-        for v in terminals[1:]:
+        for v in terminals:
+            if (v == root): continue
             coef2 = [0] * qSize
             for u in g.adj[v]:
                 coef2[get("e", u, v)] += 1
-            q = addQubo(q1=q, q2=square(coef=coef2, freeCoef=-1, size=qSize, __lambda=A)["q"], size=qSize)
-            offset += square(coef=coef2, freeCoef=-1, size=qSize, __lambda=A)["offset"]
+            q = addQubo(q1=q, q2=square(coef=coef2, freeCoef=-1, size=qSize, __lambda=4 * A)["q"], size=qSize)
+            offset += square(coef=coef2, freeCoef=-1, size=qSize, __lambda=4 * A)["offset"]
         return {
             "q": q,
             "offset": offset
@@ -395,8 +399,8 @@ def fowler(g, terminals,
                                      coef2=coef2,
                                      size=qSize, __lambda=A)["q"], size=qSize)
             offset += mul(coef1=coef1, freeCoef1=freeCoef1,
-                            coef2=coef2,
-                            size=qSize, __lambda=A)["offset"]
+                          coef2=coef2,
+                          size=qSize, __lambda=A)["offset"]
         return {
             "q": q,
             "offset": offset
@@ -428,24 +432,24 @@ def fowler(g, terminals,
     q = addQubo(q1=q, q2=objective()["q"], size=qSize)
     offset += objective()["offset"]
 
-    # Solve QUBO with D-Wave
-    chainStrength = uniform_torque_compensation(
-        bqm=BinaryQuadraticModel.from_qubo(q), prefactor=chainStrengthPrefactor)
-    sampler = EmbeddingComposite(DWaveSampler())
-    response = sampler.sample_qubo(q,
-                                   chain_strength=chainStrength,
-                                   num_reads=numReads,
-                                   label='Steiner Tree Soltuion',
-                                   annealing_time=annealing_time)
-    # dwave.inspector.show(response)
-
-    # # Solve QUBO with Simulated Annealing
-    # sampler = SimulatedAnnealingSampler()
+    # # Solve QUBO with D-Wave
+    # chainStrength = uniform_torque_compensation(
+    #     bqm=BinaryQuadraticModel.from_qubo(q), prefactor=chainStrengthPrefactor)
+    # sampler = LazyFixedEmbeddingComposite(DWaveSampler())
     # response = sampler.sample_qubo(q,
+    #                                chain_strength=chainStrength,
     #                                num_reads=numReads,
     #                                label='Steiner Tree Soltuion',
-    #                                beta_range=[0.1, 4],
-    #                                num_sweeps=1000)
+    #                                annealing_time=annealing_time)
+    # # dwave.inspector.show(response)
+
+    # Solve QUBO with Simulated Annealing
+    sampler = SimulatedAnnealingSampler()
+    response = sampler.sample_qubo(q,
+                                   num_reads=numReads,
+                                   label='Steiner Tree Soltuion',
+                                   beta_range=[0.1, 4],
+                                   num_sweeps=1000)
 
     # Analyze result
     reportFile.write("## Result\n")
@@ -454,14 +458,34 @@ def fowler(g, terminals,
     optimal = 0
     sample = response.record.sample[0]
     result = response.record.energy[0] + offset
+    satisfy1 = 0;
+    satisfy2 = 0;
+    satisfy3 = 0;
+    satisfy4 = 0;
+    satisfy5 = 0;
     for i in range(0, len(response.record.sample)):
         curSample = response.record.sample[i]
-        if (calculate(q=constraint1()["q"], offset=constraint1()["offset"], x=curSample) == 0
-                and calculate(q=constraint2()["q"], offset=constraint2()["offset"], x=curSample) == 0
-                and calculate(q=constraint3()["q"], offset=constraint3()["offset"], x=curSample) == 0
-                and calculate(q=constraint4()["q"], offset=constraint4()["offset"], x=curSample) == 0
-                and calculate(q=constraint5()["q"], offset=constraint5()["offset"], x=curSample) == 0):
+        pen1 = calculate(q=constraint1()["q"], offset=constraint1()["offset"], x=curSample)
+        pen2 = calculate(q=constraint2()["q"], offset=constraint2()["offset"], x=curSample)
+        pen3 = calculate(q=constraint3()["q"], offset=constraint3()["offset"], x=curSample)
+        pen4 = calculate(q=constraint4()["q"], offset=constraint4()["offset"], x=curSample)
+        pen5 = calculate(q=constraint5()["q"], offset=constraint5()["offset"], x=curSample)
+        if (pen1 == 0
+                and pen2 == 0
+                and pen3 == 0
+                and pen4 == 0
+                and pen5 == 0):
             success += response.record.num_occurrences[i]
+        if (pen1 == 0):
+            satisfy1 += response.record.num_occurrences[i]
+        if (pen2 == 0):
+            satisfy2 += response.record.num_occurrences[i]
+        if (pen3 == 0):
+            satisfy3 += response.record.num_occurrences[i]
+        if (pen4 == 0):
+            satisfy4 += response.record.num_occurrences[i]
+        if (pen5 == 0):
+            satisfy5 += response.record.num_occurrences[i]
         if (response.record.energy[i] + offset < result):
             sample = response.record.sample[i]
             result = response.record.energy[i] + offset
@@ -494,17 +518,96 @@ def fowler(g, terminals,
     for (u, v) in edgeListRootSepc:
         if (sample[get("e", u, v)] == 1):
             print("({}, {})".format(u, v))
-            ans.append((u, v))
-    if (result != 13):
-        optimal = 0
+            ans.append((u, v, g[u][v]['weight']))
+    # if (result != 13):
+    #     optimal = 0
     print("Steiner tree creation rate: {}/{}".format(success, numReads))
+    print("Satisfaction statistics:")
+    print("- Constraint 1: {}/{}".format(satisfy1, numReads))
+    print("- Constraint 2: {}/{}".format(satisfy2, numReads))
+    print("- Constraint 3: {}/{}".format(satisfy3, numReads))
+    print("- Constraint 4: {}/{}".format(satisfy4, numReads))
+    print("- Constraint 5: {}/{}".format(satisfy5, numReads))
     print("Optimal rate: {}/{}".format(optimal, numReads))
 
     return {
         "ans": ans,
         "success_rate": success,
         "optimal_rate": optimal,
+        "satisfy_stats": [satisfy1, satisfy2, satisfy3, satisfy4, satisfy5],
     }
+
+
+def sridhar_lam_blelloch_ravi_schwartz_ilp(g, terminals, root=0):
+    model = GEKKO()
+    model.options.SOLVER = 1
+    n = len(g.nodes)
+    m = len(g.edges)
+    edgelist = list(g.edges)
+    variables = []
+    for (u, v) in g.edges:
+        variables.append({
+            "label": ("s", u, v),
+            "var": model.Var(lb=0, ub=1, integer=True)
+        })
+    for t in terminals:
+        for (u, v) in g.edges:
+            variables.append({
+                "label": ("f", t, u, v),
+                "var": model.Var(lb=0, ub=1)
+            })
+
+    def get(type, param1=0, param2=0, param3=0):
+        if type == "s":
+            for var in variables:
+                if var["label"] == (type, param1, param2):
+                    return var["var"]
+            return None
+        if type == "f":
+            for var in variables:
+                if var["label"] == (type, param1, param2, param3):
+                    return var["var"]
+            return None
+
+    # Constraint 1
+    def constraint1_function(u):
+        return (np.sum([get("f", t, u, v) for t in terminals for v in g.adj[u]]) -
+                np.sum([get("f", t, v, u) for t in terminals for v in g.adj[u]]))
+
+    for u in range(0, n):
+        if u not in terminals:
+            model.Equation(constraint1_function(u) == 0)
+
+    # Constraint 2
+    for t in terminals:
+        model.Equation(np.sum([get("f", t, v, t) for v in g.adj[t]]) == 1)
+        if t != root:
+            model.Equation(np.sum([get("f", t, t, v) for v in g.adj[t]]) == 0)
+        model.Equation(np.sum([get("f", t, root, v) for v in g.adj[root]]) == 1)
+
+    # Constraint 3
+    for t in terminals:
+        for (u, v) in g.edges:
+            model.Equation(get("f", t, u, v) <= get("s", u, v))
+
+    def objective_function():
+        ret = 0
+        for (u, v) in edgelist:
+            if u < v:
+                ret += g[u][v]['weight'] * get("s", u, v)
+        return ret
+
+    model.Obj(objective_function())
+    model.solve(disp=False)
+    print(f"Objective: {model.options.objfcnval}")
+    print("Included edges:")
+    ans = []
+    for (u, v) in g.edges:
+        if get("s", u, v).value[0] == 1 and u < v:
+            print("({}, {})".format(u, v))
+            ans.append((u, v))
+    return model.options.objfcnval
+
 
 def readInput(file):
     with open(file) as f:
@@ -527,9 +630,5 @@ def readInput(file):
             terminals.append(int(line.split()[i]))
     return g, terminals
 
-# g, terminals = readInput("steiner.inp")
-# print(fowler(g=g, terminals=terminals,
-#             numReads=1000,
-#             __lambda=len(g.nodes) * max([g[u][v]['weight'] for (u, v) in g.edges]) + 1,
-#             chainStrengthPrefactor=0.3,
-#             annealing_time=200))
+g, terminals = readInput("steiner.inp")
+sridhar_lam_blelloch_ravi_schwartz_ilp(g, terminals)

@@ -23,6 +23,7 @@ with open("steiner.inp", "r") as inputFile:
 def counter(g=nx.DiGraph(), terminals=[], n_trials=1):
     totalSuccessCount = 0
     totalOptimalCount = 0
+    satisfy_stats = [0, 0, 0, 0, 0]
     for i in range(0, n_trials):
         print("Attempt #{}".format(i + 1))
         ans = fowler(g=g,
@@ -33,11 +34,14 @@ def counter(g=nx.DiGraph(), terminals=[], n_trials=1):
                     annealing_time=200)
         totalSuccessCount += ans["success_rate"]
         totalOptimalCount += ans["optimal_rate"]
+        satisfy_stats = [satisfy_stats[i] + ans["satisfy_stats"][i] for i in range(0, 5)]
 
     print("\n\n\n------------------------")
     print("Steiner tree creation rate: {}/{}".format(totalSuccessCount, trials * numReads))
     print("Optimal rate: {}/{}".format(totalOptimalCount, trials * numReads))
+    print("Satisfy stats: {}".format(satisfy_stats))
     return {
         "success_rate": totalSuccessCount / (trials * numReads),
-        "optimal_rate": totalOptimalCount / (trials * numReads)
+        "optimal_rate": totalOptimalCount / (trials * numReads),
+        "satisfy_stats": satisfy_stats,
     }
