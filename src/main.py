@@ -76,7 +76,7 @@ if __name__ == '__main__':
     file_list = os.listdir(ROOT)
     input_seqs = read_input('sequences.inp')
     # print(input_seqs)
-    terminals = input_seqs[:6]
+    terminals = input_seqs[:5]
     int_nodes = []
     for seqs in combinations(terminals, 3):
         print(seqs)

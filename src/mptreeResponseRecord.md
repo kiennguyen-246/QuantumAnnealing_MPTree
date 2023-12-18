@@ -67,3 +67,9 @@ Note: Takes very long time to run. More than 1 hour for 10000 test with 5 termin
 (7, 8)
 (8, 2)
 (9, 1)
+
+## Optimal answers using ILP-SA
+4: 7-7
+5: 11-11
+6: 13-14
+7: 15-16

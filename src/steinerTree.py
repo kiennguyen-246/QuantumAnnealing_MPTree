@@ -458,11 +458,11 @@ def fowler(g, terminals, root=0,
     optimal = 0
     sample = response.record.sample[0]
     result = response.record.energy[0] + offset
-    satisfy1 = 0;
-    satisfy2 = 0;
-    satisfy3 = 0;
-    satisfy4 = 0;
-    satisfy5 = 0;
+    satisfy1 = 0
+    satisfy2 = 0
+    satisfy3 = 0
+    satisfy4 = 0
+    satisfy5 = 0
     for i in range(0, len(response.record.sample)):
         curSample = response.record.sample[i]
         pen1 = calculate(q=constraint1()["q"], offset=constraint1()["offset"], x=curSample)
@@ -539,7 +539,12 @@ def fowler(g, terminals, root=0,
 
 
 def sridhar_lam_blelloch_ravi_schwartz_ilp(g, terminals, root=0):
-    model = GEKKO()
+    print(g)
+    print(g.edges)
+    print(terminals)
+    print("Root: ", root)
+
+    model = GEKKO(remote=False)
     model.options.SOLVER = 1
     n = len(g.nodes)
     m = len(g.edges)
@@ -569,20 +574,22 @@ def sridhar_lam_blelloch_ravi_schwartz_ilp(g, terminals, root=0):
                     return var["var"]
             return None
 
-    # Constraint 1
-    def constraint1_function(u):
-        return (np.sum([get("f", t, u, v) for t in terminals for v in g.adj[u]]) -
-                np.sum([get("f", t, v, u) for t in terminals for v in g.adj[u]]))
+    # print([(("f", 0, 1, v), get("f", 0, 1, v)) for v in g.adj[1]])
+    # print([(("f", 0, v, 1), get("f", 0, v, 1)) for v in g.adj[1]])
 
-    for u in range(0, n):
-        if u not in terminals:
-            model.Equation(constraint1_function(u) == 0)
+    # Constraint 1
+    for t in terminals:
+        for u in range(0, n):
+            if u != t and u != root:
+                model.Equation(np.sum([get("f", t, u, v) for v in g.adj[u]])
+                               == np.sum([get("f", t, v, u) for v in g.adj[u]]))
 
     # Constraint 2
     for t in terminals:
+        if t == root:
+            continue
         model.Equation(np.sum([get("f", t, v, t) for v in g.adj[t]]) == 1)
-        if t != root:
-            model.Equation(np.sum([get("f", t, t, v) for v in g.adj[t]]) == 0)
+        model.Equation(np.sum([get("f", t, t, v) for v in g.adj[t]]) == 0)
         model.Equation(np.sum([get("f", t, root, v) for v in g.adj[root]]) == 1)
 
     # Constraint 3
@@ -593,7 +600,6 @@ def sridhar_lam_blelloch_ravi_schwartz_ilp(g, terminals, root=0):
     def objective_function():
         ret = 0
         for (u, v) in edgelist:
-            if u < v:
                 ret += g[u][v]['weight'] * get("s", u, v)
         return ret
 
@@ -603,10 +609,15 @@ def sridhar_lam_blelloch_ravi_schwartz_ilp(g, terminals, root=0):
     print("Included edges:")
     ans = []
     for (u, v) in g.edges:
-        if get("s", u, v).value[0] == 1 and u < v:
+        if get("s", u, v).value[0] == 1:
             print("({}, {})".format(u, v))
-            ans.append((u, v))
-    return model.options.objfcnval
+            ans.append((u, v, g[u][v]['weight']))
+    # print("Variables: ")
+    # for var in variables:
+    #     print(var["label"], var["var"].value)
+    return {
+        "ans": ans
+    }
 
 
 def readInput(file):
@@ -630,5 +641,5 @@ def readInput(file):
             terminals.append(int(line.split()[i]))
     return g, terminals
 
-g, terminals = readInput("steiner.inp")
-sridhar_lam_blelloch_ravi_schwartz_ilp(g, terminals)
+# g, terminals = readInput("steiner.inp")
+# sridhar_lam_blelloch_ravi_schwartz_ilp(g, terminals)
