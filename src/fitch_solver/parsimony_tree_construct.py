@@ -64,8 +64,11 @@ class TreeReader:
         data = []
         with open(file_path, 'r') as file:
             for line in file:
-                seq1, seq2, dist = line.strip().split()
-                data.append((seq1, seq2, int(dist)))
+                # Remove leading and trailing whitespaces
+                line = line.strip()
+                if line:
+                    seq1, seq2, dist = line.split()
+                    data.append((seq1, seq2, int(dist)))
         return data
 
 
@@ -97,6 +100,57 @@ class ParsimonyTree:
         for node in self.nodes.values():
             if node.parent is None:
                 return node
+
+
+class FitchSolver:
+    def __init__(self, parsimony_tree):
+        self.parsimony_tree = parsimony_tree
+        self.solutions = {}
+
+    def solve(self, node=None):
+        if node is None:
+            node = self.parsimony_tree.get_root()
+
+        if not node.children:  # If it's a leaf node
+            return {node.label: 0}
+
+        # If the solutions for this node have been already computed, return it
+        if node.label in self.solutions:
+            return self.solutions[node.label]
+
+        # Recursively solve for the children
+        children = node.children
+
+        if len(children) == 1:
+            child, distance = children[0]
+            child_solution = self.solve(child)
+
+            # Cache the result for future use
+            self.solutions[node.label] = child_solution
+            return child_solution
+
+        left_child, left_distance = children[0]
+        right_child, right_distance = children[1]
+
+        left_solution = self.solve(left_child)
+        right_solution = self.solve(right_child)
+
+        # Calculate the intersection and union of bases
+        intersection_bases = set(left_solution.keys()) & set(right_solution.keys())
+        union_bases = set(left_solution.keys()) | set(right_solution.keys())
+
+        # Calculate the new solution
+        if intersection_bases:
+            result = {base: 0 for base in intersection_bases}
+            cost = left_solution.get(list(left_solution.keys())[0], 0) + right_solution.get(list(right_solution.keys())[0], 0)
+        else:
+            result = {base: 1 for base in union_bases}
+            cost = left_solution.get(list(left_solution.keys())[0], 0) + right_solution.get(list(right_solution.keys())[0], 0) + 1
+
+        # Cache the result for future use
+        self.solutions[node.label] = result
+
+        return result
 
 
 def print_tree_dfs(inp_root):
@@ -150,8 +204,9 @@ if __name__ == '__main__':
     int_nodes = list(set(int_nodes))
     print(f'Generated {len(int_nodes)} internal nodes as:')
     print(int_nodes)
+
     tree_edges = TreeReader.read_tree_file(
-        "F:\\UET_Quantum\\QuantumAnnealing_MPTree\\quantum_tree_output\\5terminals_4.txt")
+        "F:\\UET_Quantum\\QuantumAnnealing_MPTree\\quantum_tree_output\\6terminals_1.txt")
     print(f"tree_edges: {tree_edges}")
 
     parsimony_tree = ParsimonyTree()
@@ -162,18 +217,12 @@ if __name__ == '__main__':
 
     root = parsimony_tree.get_root()
     print(f"Root: {root.label}")
+
     print("Tree DFS traversing:")
     print_tree_dfs(root)
-    print("Illustration: ")
-    print_tree(root)
-    print("Newick formatted tree")
-    newick_string = to_newick(root)
-    print(newick_string)
 
-    nwk_tree = Phylo.read(io.StringIO(newick_string), "newick")
-    print(nwk_tree)
-
-    if is_optimized(newick_string):
-        print("The tree is optimized")
-
-
+    print("Fitch solutions:")
+    fitch_solver = FitchSolver(parsimony_tree)
+    solutions = fitch_solver.solve(root)
+    for label, cost in solutions.items():
+        print(f"Node: {label}, Fitch cost: {cost}")

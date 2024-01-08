@@ -4,20 +4,25 @@ class Node:
         self.children = children or []
 
 def fitch_algorithm(node):
+    score = 0
     if not node.children:
         # Leaf node
-        return set(node.name)
+        return set(node.name), 0
 
     # Recursively apply Fitch algorithm to children
     child_states = [fitch_algorithm(child) for child in node.children]
 
     # Fitch algorithm logic
-    common_states = set.intersection(*child_states)
+    common_states = set.intersection(*[states for states, _ in child_states])
     if not common_states:
         # No common state, choose one arbitrary state
-        common_states = {list(child_states[0])[0]}
+        common_states = {list(child_states[0][0])[0]}
+        score += 1
 
-    return common_states
+    # Count the scores from children
+    score += sum([s for _, s in child_states])
+
+    return common_states, score
 
 def construct_tree_from_newick(newick_string):
     stack = []
@@ -48,8 +53,9 @@ def construct_tree_from_newick(newick_string):
 
 def is_optimized(newick_string):
     root = construct_tree_from_newick(newick_string)
-    result = fitch_algorithm(root)
-    return len(result) == 1
+    print(root.name)
+    _, result = fitch_algorithm(root)
+    return result
 
 # Example usage
 newick_tree = "((AGGAT:3,(CTGTA:3,(AACAT:1)AAGAT:3)ATGGC:2)ATCAC:1,(ATTAG:1)ATTAT:3)ATCGC"
