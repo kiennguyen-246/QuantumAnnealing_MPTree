@@ -82,13 +82,13 @@ def getAns(v_e_list=None,
     # counter(g=g, terminals=terminals, n_trials=10)
     print("\n\n\n\n\n------------------------\n")
 
-    # ans = fowler(g=g, terminals=terminals, root=root,
-    #              numReads=1000,
-    #              __lambda=len(g.nodes) * max([g[u][v]['weight'] for (u, v) in g.edges]) + 1,
-    #              chainStrengthPrefactor=0.3,
-    #              annealing_time=200)["ans"]
+    ans = fowler(g=g, terminals=terminals, root=root,
+                 numReads=1000,
+                 __lambda=len(g.nodes) * max([g[u][v]['weight'] for (u, v) in g.edges]) + 1,
+                 chainStrengthPrefactor=0.3,
+                 annealing_time=200)["ans"]
 
-    ans = sridhar_lam_blelloch_ravi_schwartz_ilp(g=g, terminals=terminals, root=root)["ans"]
+    # ans = sridhar_lam_blelloch_ravi_schwartz_ilp(g=g, terminals=terminals, root=root)["ans"]
 
     print(ans)
     ans_edges = []

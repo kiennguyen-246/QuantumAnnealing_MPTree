@@ -432,24 +432,24 @@ def fowler(g, terminals, root=0,
     q = addQubo(q1=q, q2=objective()["q"], size=qSize)
     offset += objective()["offset"]
 
-    # # Solve QUBO with D-Wave
-    # chainStrength = uniform_torque_compensation(
-    #     bqm=BinaryQuadraticModel.from_qubo(q), prefactor=chainStrengthPrefactor)
-    # sampler = LazyFixedEmbeddingComposite(DWaveSampler())
-    # response = sampler.sample_qubo(q,
-    #                                chain_strength=chainStrength,
-    #                                num_reads=numReads,
-    #                                label='Steiner Tree Soltuion',
-    #                                annealing_time=annealing_time)
-    # # dwave.inspector.show(response)
-
-    # Solve QUBO with Simulated Annealing
-    sampler = SimulatedAnnealingSampler()
+    # Solve QUBO with D-Wave
+    chainStrength = uniform_torque_compensation(
+        bqm=BinaryQuadraticModel.from_qubo(q), prefactor=chainStrengthPrefactor)
+    sampler = LazyFixedEmbeddingComposite(DWaveSampler())
     response = sampler.sample_qubo(q,
+                                   chain_strength=chainStrength,
                                    num_reads=numReads,
                                    label='Steiner Tree Soltuion',
-                                   beta_range=[0.1, 4],
-                                   num_sweeps=1000)
+                                   annealing_time=annealing_time)
+    # dwave.inspector.show(response)
+
+    # # Solve QUBO with Simulated Annealing
+    # sampler = SimulatedAnnealingSampler()
+    # response = sampler.sample_qubo(q,
+    #                                num_reads=numReads,
+    #                                label='Steiner Tree Soltuion',
+    #                                beta_range=[0.1, 4],
+    #                                num_sweeps=1000)
 
     # Analyze result
     reportFile.write("## Result\n")
