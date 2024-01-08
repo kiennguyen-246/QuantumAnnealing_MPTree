@@ -76,7 +76,8 @@ if __name__ == '__main__':
     file_list = os.listdir(ROOT)
     input_seqs = read_input('sequences.inp')
     # print(input_seqs)
-    terminals = input_seqs[:5]
+    terminals = input_seqs[:4]
+    print(terminals)
     int_nodes = []
     for seqs in combinations(terminals, 3):
         print(seqs)
@@ -95,13 +96,13 @@ if __name__ == '__main__':
         v_e_list.append(pairs_w)
     print(v_e_list)
 
-    ans = getAns(v_e_list=v_e_list,
-           seqList=terminals + int_nodes,
-           terminals=terminals)
-
-    print("\n\n\n------------------------")
-
-    print(ans)
+    # ans = getAns(v_e_list=v_e_list,
+    #        seqList=terminals + int_nodes,
+    #        terminals=terminals)
+    #
+    # print("\n\n\n------------------------")
+    #
+    # print(ans)
 
 
     # # Graph
