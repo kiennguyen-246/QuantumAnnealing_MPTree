@@ -316,10 +316,10 @@ def fowler(g, terminals, root=0,
             for v in range(u + 1, n):
                 for w in range(v + 1, n):
                     if (u == root or v == root or w == root): continue
-                    q[(get("x", u, w), get("x", u, w))] += 4 * A
-                    q[(get("x", u, v), get("x", v, w))] += 4 * A
-                    q[(get("x", u, v), get("x", u, w))] -= 4 * A
-                    q[(get("x", u, w), get("x", v, w))] -= 4 * A
+                    q[(get("x", u, w), get("x", u, w))] += 5 * A
+                    q[(get("x", u, v), get("x", v, w))] += 5 * A
+                    q[(get("x", u, v), get("x", u, w))] -= 5 * A
+                    q[(get("x", u, w), get("x", v, w))] -= 5 * A
         return {
             "q": q,
             "offset": offset
@@ -353,8 +353,8 @@ def fowler(g, terminals, root=0,
             coef2 = [0] * qSize
             for u in g.adj[v]:
                 coef2[get("e", u, v)] += 1
-            q = addQubo(q1=q, q2=square(coef=coef2, freeCoef=-1, size=qSize, __lambda=4 * A)["q"], size=qSize)
-            offset += square(coef=coef2, freeCoef=-1, size=qSize, __lambda=4 * A)["offset"]
+            q = addQubo(q1=q, q2=square(coef=coef2, freeCoef=-1, size=qSize, __lambda=2 * A)["q"], size=qSize)
+            offset += square(coef=coef2, freeCoef=-1, size=qSize, __lambda=2 * A)["offset"]
         return {
             "q": q,
             "offset": offset
