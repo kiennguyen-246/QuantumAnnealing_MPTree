@@ -82,13 +82,11 @@ def getAns(v_e_list=None,
     # counter(g=g, terminals=terminals, n_trials=10)
     print("\n\n\n\n\n------------------------\n")
 
-    # ans = fowler(g=g, terminals=terminals, root=root,
-    #              numReads=1000,
-    #              __lambda=len(g.nodes) * max([g[u][v]['weight'] for (u, v) in g.edges]) + 1,
-    #              chainStrengthPrefactor=0.3,
-    #              annealing_time=200)["ans"]
+    ans = fowler(g=g, terminals=terminals, root=root,
+                 __lambda=len(g.nodes) * max([g[u][v]['weight'] for (u, v) in g.edges]) + 1,
+                 )["ans"]
 
-    ans = sridhar_lam_blelloch_ravi_schwartz_ilp(g=g, terminals=terminals, root=root)["ans"]
+    # ans = sridhar_lam_blelloch_ravi_schwartz_ilp(g=g, terminals=terminals, root=root)["ans"]
 
     print(ans)
     ans_edges = []
@@ -99,9 +97,6 @@ def getAns(v_e_list=None,
     #     return sum(c1 != c2 for c1, c2 in zip(u, v))
     # for i in range(0, len(ans)):
     #     ans_edges.append((seqList[ans[i][0]], seqList[ans[i][1]], hamming_distance(seqList[ans[i][0]], seqList[ans[i][1]])))
-
-
-
 
     return ans_edges
 
@@ -131,6 +126,5 @@ def convertSeqToIndex(seq, seqList):
     for i in range(0, len(seqList)):
         if (seq == seqList[i]):
             return i
-
 
 # newport([(0, 5, 1), (0, 10, 1), (5, 4, 3), (8, 2, 1), (8, 3, 2), (10, 1, 2), (10, 8, 1)])

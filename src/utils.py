@@ -13,7 +13,7 @@ def reportTable(reportFile, response):
             response.record.sample[i], response.record.energy[i], response.record.num_occurrences[i]))
 
 
-def addQubo(q1=defaultdict, q2=defaultdict, size=0):
+def add_qubo(q1=defaultdict, q2=defaultdict, size=0):
     """
     Add two QUBOs.
     """
@@ -21,6 +21,18 @@ def addQubo(q1=defaultdict, q2=defaultdict, size=0):
         for j in range(0, size):
             q1[(i, j)] += q2[(i, j)]
     return q1
+
+def sum_max_1(q=defaultdict, size=0, x=0, y=0, z=0, __lambda=1):
+    """
+    Constraint: max(1, x + y) = z, quadratic form: H = x^2 + y^2 + z^2 + xy - 2xz - 2yz
+    """
+    q[(x, x)] += __lambda
+    q[(y, y)] += __lambda
+    q[(z, z)] += __lambda
+    q[(x, y)] += __lambda
+    q[(x, z)] -= 2 * __lambda
+    q[(y, z)] -= 2 * __lambda
+    return q
 
 def mul(coef1=[], freeCoef1=0, coef2=[], freeCoef2=0, size=0, __lambda=1):
     """

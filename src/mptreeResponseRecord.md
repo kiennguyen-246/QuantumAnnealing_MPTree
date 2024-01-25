@@ -73,3 +73,8 @@ Note: Takes very long time to run. More than 1 hour for 10000 test with 5 termin
 5: 11-11
 6: 13-14
 7: 15-16
+
+## Optimal answers, Quantum, improved 3rd constraint
+### Config 1
+`[2 7 5 1 1]`:
+4: 34/1000

@@ -190,7 +190,7 @@ def to_newick(node):
 if __name__ == '__main__':
     ROOT = os.getcwd()
     file_list = os.listdir(ROOT)
-    input_seqs = SequenceReader.read_input('F:\\UET_Quantum\\QuantumAnnealing_MPTree\\src\\sequences.inp')
+    input_seqs = SequenceReader.read_input('../../quantum_tree_output/6terminals_1.txt')
     terminals = input_seqs[:5]
     int_nodes = []
 
@@ -206,7 +206,7 @@ if __name__ == '__main__':
     print(int_nodes)
 
     tree_edges = TreeReader.read_tree_file(
-        "F:\\UET_Quantum\\QuantumAnnealing_MPTree\\quantum_tree_output\\6terminals_1.txt")
+        "../../quantum_tree_output/6terminals_1.txt")
     print(f"tree_edges: {tree_edges}")
 
     parsimony_tree = ParsimonyTree()
