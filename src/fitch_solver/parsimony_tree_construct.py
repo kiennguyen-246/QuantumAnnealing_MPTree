@@ -28,6 +28,31 @@ class SequenceReader:
             return f"An error occurred: {e}"
         return seq_list
 
+    @staticmethod
+    def read_input_phy(file_path):
+        try:
+            if not os.path.exists(file_path):
+                raise FileNotFoundError(f"The path '{file_path}' does not exist.")
+
+            if not os.path.isfile(file_path):
+                raise FileNotFoundError(f"The path '{file_path}' is not a file.")
+
+            seq_list = []
+            with open(file_path, 'r') as file:
+                lines = file.readlines()
+
+                for line in lines[1:]:
+                    # Start from line 1, skipping line 0
+                    line = line.strip()
+                    line = line.split()
+                    seq_list.append(line[1])
+
+        except FileNotFoundError as e:
+            return f"Error: {e}"
+        except Exception as e:
+            return f"An error occurred: {e}"
+        return seq_list
+
 
 class Triplet:
     def __init__(self, seq1, seq2, seq3):
@@ -190,7 +215,8 @@ def to_newick(node):
 if __name__ == '__main__':
     ROOT = os.getcwd()
     file_list = os.listdir(ROOT)
-    input_seqs = SequenceReader.read_input('../../quantum_tree_output/6terminals_1.txt')
+    input_seqs = SequenceReader.read_input_phy('../data_treebase/dna_M667_218_1002.phy')
+    print(input_seqs)
     terminals = input_seqs[:5]
     int_nodes = []
 
@@ -220,7 +246,7 @@ if __name__ == '__main__':
 
     print("Tree DFS traversing:")
     print_tree_dfs(root)
-
+    print_tree(root)
     print("Fitch solutions:")
     fitch_solver = FitchSolver(parsimony_tree)
     solutions = fitch_solver.solve(root)
