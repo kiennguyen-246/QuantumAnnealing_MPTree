@@ -4,29 +4,51 @@ from itertools import combinations
 import networkx as nx
 from makeGraph import getAns
 
-def read_input(file_path):
-    try:
-        # Check if the path exists
-        if not os.path.exists(file_path):
-            raise FileNotFoundError(f"The path '{file_path}' does not exist.")
+class SequenceReader:
+    @staticmethod
+    def read_input(file_path):
+        try:
+            if not os.path.exists(file_path):
+                raise FileNotFoundError(f"The path '{file_path}' does not exist.")
 
-        # Check if the path is a file
-        if not os.path.isfile(file_path):
-            raise FileNotFoundError(f"The path '{file_path}' is not a file.")
+            if not os.path.isfile(file_path):
+                raise FileNotFoundError(f"The path '{file_path}' is not a file.")
 
-        # Open the file
-        seq_list = []
-        with open(file_path, 'r') as file:
-            for line in file:
-                seq_list.append(line.strip())
+            seq_list = []
+            with open(file_path, 'r') as file:
+                for line in file:
+                    seq_list.append(line.strip())
 
-    except FileNotFoundError as e:
-        # Handle the case where the file or path does not exist
-        return f"Error: {e}"
-    except Exception as e:
-        # Handle other exceptions
-        return f"An error occurred: {e}"
-    return seq_list
+        except FileNotFoundError as e:
+            return f"Error: {e}"
+        except Exception as e:
+            return f"An error occurred: {e}"
+        return seq_list
+
+    @staticmethod
+    def read_input_phy(file_path):
+        try:
+            if not os.path.exists(file_path):
+                raise FileNotFoundError(f"The path '{file_path}' does not exist.")
+
+            if not os.path.isfile(file_path):
+                raise FileNotFoundError(f"The path '{file_path}' is not a file.")
+
+            seq_list = []
+            with open(file_path, 'r') as file:
+                lines = file.readlines()
+
+                for line in lines[1:]:
+                    # Start from line 1, skipping line 0
+                    line = line.strip()
+                    line = line.split()
+                    seq_list.append(line[1])
+
+        except FileNotFoundError as e:
+            return f"Error: {e}"
+        except Exception as e:
+            return f"An error occurred: {e}"
+        return seq_list
 
 
 class Triplet:
@@ -72,29 +94,31 @@ class Edge:
 
 
 if __name__ == '__main__':
+    # New input for phylo file
     ROOT = os.getcwd()
     file_list = os.listdir(ROOT)
-    input_seqs = read_input('sequences.inp')
+    input_seqs = SequenceReader.read_input_phy('data_treebase/dna_M667_218_1002.phy')
     # print(input_seqs)
     terminals = input_seqs[:5]
-    print(terminals)
+    for idx, term in enumerate(terminals):
+        print(f"{idx}) {term}")
     int_nodes = []
     for seqs in combinations(terminals, 3):
-        print(seqs)
+        # print(seqs)
         int_nodes.append(Triplet(seqs[0], seqs[1], seqs[2]).consensus())
 
     # Remove duplicates
     print(f'Original internal nodes:{len(int_nodes)}')
-    print(int_nodes)
+    # print(int_nodes)
     int_nodes = list(set(int_nodes))
     print(f'Generated {len(int_nodes)} internal nodes as:')
-    print(int_nodes)
+    # print(int_nodes)
     v_e_list = []
     for pairs in combinations(terminals + int_nodes, 2):
         # print(len())
         pairs_w = list(pairs) + [Edge(pairs).hamming_distance()]
         v_e_list.append(pairs_w)
-    print(v_e_list)
+    # print(v_e_list)
 
     ans = getAns(v_e_list=v_e_list,
            seqList=terminals + int_nodes,
