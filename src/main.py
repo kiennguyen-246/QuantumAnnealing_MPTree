@@ -50,6 +50,29 @@ class SequenceReader:
             return f"An error occurred: {e}"
         return seq_list
 
+    @staticmethod
+    def statistic_module(seq_list):
+        seq_len = len(seq_list[0])  # Assuming all sequences in seq_list have the same length
+        stat = []
+
+        for idx in range(seq_len):
+            accu = {}
+            counter = {'A': 0, 'T': 0, 'C': 0, 'G': 0, '-': 0}
+
+            for seq in seq_list:
+                if seq[idx] in {'-', 'M', 'H', 'Y', 'R', 'S'}:
+                    counter['-'] += 1
+                else:
+                    for item in ('A', 'T', 'C', 'G'):
+                        counter[item] += 1 if seq[idx] == item else 0
+
+            for item in ('A', 'T', 'C', 'G'):
+                accu[item] = counter[item] / (seq_len - counter['-']) if (seq_len - counter['-']) != 0 else 0
+
+            stat.append(accu)
+
+        return stat
+
 
 class Triplet:
     def __init__(self, seq1, seq2, seq3):
@@ -67,11 +90,34 @@ class Triplet:
 
         consensus_sequence = ''
 
-        for pos in transposed_sequences:
+        for idx, pos in enumerate(transposed_sequences):
             # Count the occurrences of each character at the current position
             char_counts = Counter(pos)
-            # print(char_counts.most_common(1)[0])
+            # print(char_counts.most_common(1))
             most_common_char = char_counts.most_common(1)[0][0]
+            print(f"Most common character at pos{idx}: {most_common_char}")
+            consensus_sequence += most_common_char
+
+        return consensus_sequence
+
+    def consensus_2(self, stat):
+        # Calculate statistics using the statistic_module method
+        # stat = Triplet.statistic_module(self.sequences)
+
+        transposed_sequences = zip(*self.sequences)
+        consensus_sequence = ''
+        idx = 0
+        for pos, pos_stat in zip(transposed_sequences, stat):
+            idx+=1
+            # Count the occurrences of each character at the current position (skip '-')
+            char_counts = Counter(filter(lambda x: x not in {'-', 'M', 'H', 'Y', 'R', 'S'}, pos))
+
+            # If there is a tie, use the stat to select the highest accuracy nucleotide
+            if char_counts:
+                most_common_char = max(char_counts, key=lambda x: (char_counts[x], pos_stat[x]))
+            else:
+                most_common_char = '-'
+
             consensus_sequence += most_common_char
 
         return consensus_sequence
@@ -98,6 +144,7 @@ if __name__ == '__main__':
     ROOT = os.getcwd()
     file_list = os.listdir(ROOT)
     input_seqs = SequenceReader.read_input_phy('data_treebase/dna_M667_218_1002.phy')
+    stat = SequenceReader.statistic_module(input_seqs)
     # print(input_seqs)
     terminals = input_seqs[:5]
     for idx, term in enumerate(terminals):
@@ -105,20 +152,22 @@ if __name__ == '__main__':
     int_nodes = []
     for seqs in combinations(terminals, 3):
         # print(seqs)
-        int_nodes.append(Triplet(seqs[0], seqs[1], seqs[2]).consensus())
+        int_nodes.append(Triplet(seqs[0], seqs[1], seqs[2]).consensus_2(stat))
 
     # Remove duplicates
     print(f'Original internal nodes:{len(int_nodes)}')
     # print(int_nodes)
     int_nodes = list(set(int_nodes))
     print(f'Generated {len(int_nodes)} internal nodes as:')
-    # print(int_nodes)
+    for idx, node in enumerate(int_nodes):
+        print(f"{idx}) {node}")
+
     v_e_list = []
     for pairs in combinations(terminals + int_nodes, 2):
         # print(len())
         pairs_w = list(pairs) + [Edge(pairs).hamming_distance()]
         v_e_list.append(pairs_w)
-    # print(v_e_list)
+    print(v_e_list)
 
     ans = getAns(v_e_list=v_e_list,
            seqList=terminals + int_nodes,
