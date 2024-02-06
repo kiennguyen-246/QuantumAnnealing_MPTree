@@ -1,0 +1,9 @@
+Config: F_1000-60.1505311697245s-1_A200
+Number of source variables: 25
+Number of target variables: 89
+Time Elapsed: 1.8640167713165283
+Best State: [1 0 0 0 0 0 1 1 0 0 0 1 0 0 0 1 0 0 0 0 0 0 0 0 0]
+27.0	0.08
+ChainStr/ChainLen: 60.1505311697245/4
+Info: {'qpu_sampling_time': 277200.0, 'qpu_anneal_time_per_sample': 200.0, 'qpu_readout_time_per_sample': 56.66, 'qpu_access_time': 293124.77, 'qpu_access_overhead_time': 1564.23, 'qpu_programming_time': 15924.77, 'qpu_delay_time_per_sample': 20.54, 'total_post_processing_time': 21.0, 'post_processing_overhead_time': 21.0}
+Embedding Info: {'embedding': {1: (366, 4306, 367, 365), 0: (4276, 456, 455, 352), 2: (3931, 3932, 620, 635), 3: (471, 470, 4126), 4: (4052, 4053, 4051), 5: (485, 486, 3946), 6: (4022, 4021, 440), 7: (501, 500, 4111), 8: (3976, 3977, 305, 290), 9: (4007, 605, 4006), 10: (4096, 4097, 681, 4095), 11: (4186, 531, 4187, 530), 12: (351, 350, 4171), 13: (4202, 4201, 516, 515), 14: (396, 397, 395, 4336), 15: (4261, 337, 336, 335), 16: (4082, 4081, 4080, 666), 17: (381, 382, 380, 3826), 18: (4067, 4066, 4068), 19: (4157, 4156, 561, 560), 20: (411, 412, 410), 21: (4037, 4036, 231, 4038), 22: (3992, 546, 3991), 23: (275, 3961, 3962), 24: (426, 4141, 425, 4142)}, 'chain_break_method': 'majority_vote', 'embedding_parameters': {}, 'chain_strength': 60.1505311697245}

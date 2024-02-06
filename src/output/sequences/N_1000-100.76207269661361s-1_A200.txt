@@ -1,0 +1,9 @@
+Config: N_1000-100.76207269661361s-1_A200
+Number of source variables: 34
+Number of target variables: 43
+Time Elapsed: 0.10374689102172852
+Best State: [0 0 1 1 1 0 0 1 0 0 0 0 0 0 0 0 0 0 1 1 1 1 1 1 1 0 1 1 1 1 1 1 1 1]
+13.0	0.0
+ChainStr/ChainLen: 100.76207269661361/2
+Info: {'qpu_sampling_time': 281120.0, 'qpu_anneal_time_per_sample': 200.0, 'qpu_readout_time_per_sample': 60.58, 'qpu_access_time': 297049.97, 'qpu_access_overhead_time': 851.03, 'qpu_programming_time': 15929.97, 'qpu_delay_time_per_sample': 20.54, 'total_post_processing_time': 59.0, 'post_processing_overhead_time': 59.0}
+Embedding Info: {'embedding': {16: (2222,), 17: (2267, 3522), 19: (3476, 2208), 18: (3507,), 20: (2237,), 21: (3492,), 0: (3400, 3401), 3: (3461,), 1: (3416,), 10: (3566,), 2: (2282, 3462), 13: (2358,), 4: (2132, 3386), 11: (2102,), 5: (3431, 3432), 14: (3446,), 12: (2327,), 15: (2193,), 30: (2207,), 8: (3342,), 31: (2192,), 33: (2402,), 9: (2417,), 34: (3402,), 6: (2178,), 22: (2163,), 23: (3551, 3552), 24: (2343,), 7: (1967,), 26: (3415,), 27: (2117,), 28: (2072, 3506), 25: (3477, 2252), 29: (2147,)}, 'chain_break_method': 'majority_vote', 'embedding_parameters': {}, 'chain_strength': 100.76207269661361}

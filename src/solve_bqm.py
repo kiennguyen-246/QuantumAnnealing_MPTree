@@ -54,9 +54,9 @@ def solve_quantum_annealing(bqm,
     end = time.time()
     dwave.inspector.show(response)
     chains = response.info["embedding_context"]["embedding"].values()
-    for chain in chains:
-        if len(chain) > 10:
-            print(chain)
+    # for chain in chains:
+    #     if len(chain) > 10:
+    #         print(chain)
 
     if not os.path.exists(output_dir):
         os.makedirs(output_dir)
@@ -82,7 +82,7 @@ def solve_simulated_annealing(bqm, method="?_", num_reads=1000):
     num_sweeps = 1000
     # config = method + str(num_reads) + "-SA" + "".join(str(beta_range).split(" ")) + "s" + str(num_sweeps)
     config = method + str(num_reads) + "-SA" + "s" + str(num_sweeps)
-    print(config)
+    # print(config)
     response = sampler.sample(bqm,
                               num_reads=num_reads,
                               label=config,

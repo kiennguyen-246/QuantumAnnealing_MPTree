@@ -17,10 +17,48 @@ def add_qubo(q1=defaultdict, q2=defaultdict, size=0):
     """
     Add two QUBOs.
     """
+    for (i, j) in q2:
+        q1[(i, j)] += q2[(i, j)]
+    return q1
+
+def mul(coef1=[], freeCoef1=0, coef2=[], freeCoef2=0, size=0, __lambda=1):
+    """
+    Multiply two linear terms.
+    """
+    q = defaultdict(int)
     for i in range(0, size):
         for j in range(0, size):
-            q1[(i, j)] += q2[(i, j)]
-    return q1
+            if __lambda * coef1[i] * coef2[j] != 0:
+                q[(i, j)] += __lambda * coef1[i] * coef2[j]
+    for i in range(0, size):
+        if __lambda * coef1[i] * freeCoef2 != 0:
+            q[(i, i)] += __lambda * coef1[i] * freeCoef2
+    for i in range(0, size):
+        if __lambda * freeCoef1 * coef2[i] != 0:
+            q[(i, i)] += __lambda * freeCoef1 * coef2[i]
+    return {
+        "q": q,
+        "offset": __lambda * freeCoef1 * freeCoef2
+    }
+
+def square(coef=[], freeCoef=0, size=0, __lambda=1):
+    """
+    Add a quadratic term to the QUBO.
+    """
+    q = defaultdict(int)
+    for i in range(0, size):
+        if __lambda * coef[i] ** 2 != 0:
+            q[(i, i)] += __lambda * coef[i] ** 2
+    for i in range(0, size):
+        if __lambda * 2 * freeCoef * coef[i] != 0:
+            q[(i, i)] += __lambda * 2 * freeCoef * coef[i]
+    for (i, j) in combinations(range(0, size), 2):
+        if __lambda * 2 * coef[i] * coef[j] != 0:
+            q[(i, j)] += __lambda * 2 * coef[i] * coef[j]
+    return {
+        "q": q,
+        "offset": __lambda * freeCoef ** 2
+    }
 
 def add_bitwise_or(q=defaultdict, size=0, x=0, y=0, z=0, __lambda=1):
     """
@@ -48,38 +86,6 @@ def add_bitwise_or_exc_11(q=defaultdict, size=0, x=0, y=0, z=0, __lambda=1):
     q[(y, z)] -= 2 * __lambda
     return q
 
-def mul(coef1=[], freeCoef1=0, coef2=[], freeCoef2=0, size=0, __lambda=1):
-    """
-    Multiply two linear terms.
-    """
-    q = defaultdict(int)
-    for i in range(0, size):
-        for j in range(0, size):
-            q[(i, j)] += __lambda * coef1[i] * coef2[j]
-    for i in range(0, size):
-        q[(i, i)] += __lambda * coef1[i] * freeCoef2
-    for i in range(0, size):
-        q[(i, i)] += __lambda * freeCoef1 * coef2[i]
-    return {
-        "q": q,
-        "offset": __lambda * freeCoef1 * freeCoef2
-    }
-
-def square(coef=[], freeCoef=0, size=0, __lambda=1):
-    """
-    Add a quadratic term to the QUBO.
-    """
-    q = defaultdict(int)
-    for i in range(0, size):
-        q[(i, i)] += __lambda * coef[i] ** 2
-    for i in range(0, size):
-        q[(i, i)] += __lambda * 2 * freeCoef * coef[i]
-    for (i, j) in combinations(range(0, size), 2):
-        q[(i, j)] += __lambda * 2 * coef[i] * coef[j]
-    return {
-        "q": q,
-        "offset": __lambda * freeCoef ** 2
-    }
 
 def calculate(q=defaultdict(int), offset=0, x=[]):
     """
