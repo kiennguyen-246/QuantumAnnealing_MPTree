@@ -143,10 +143,11 @@ if __name__ == '__main__':
     # New input for phylo file
     ROOT = os.getcwd()
     file_list = os.listdir(ROOT)
+    # input_seqs = SequenceReader.read_input('sequences.inp')
     input_seqs = SequenceReader.read_input_phy('data_treebase/dna_M667_218_1002.phy')
     stat = SequenceReader.statistic_module(input_seqs)
     # print(input_seqs)
-    terminals = input_seqs[:5]
+    terminals = input_seqs[:4]
     for idx, term in enumerate(terminals):
         print(f"{idx}) {term}")
     int_nodes = []

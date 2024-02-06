@@ -1,0 +1,9 @@
+Config: F_1000-1679.5169273966146s-1_A200
+Number of source variables: 17
+Number of target variables: 43
+Time Elapsed: 0.24017095565795898
+Best State: [1 0 1 0 0 1 0 0 1 1 1 1 0 0 1 0 1]
+718.0	0.058823529411764705
+ChainStr/ChainLen: 1679.5169273966146/3
+Info: {'qpu_sampling_time': 273260.0, 'qpu_anneal_time_per_sample': 200.0, 'qpu_readout_time_per_sample': 52.72, 'qpu_access_time': 289188.77, 'qpu_access_overhead_time': 740.23, 'qpu_programming_time': 15928.77, 'qpu_delay_time_per_sample': 20.54, 'total_post_processing_time': 300.0, 'post_processing_overhead_time': 300.0}
+Embedding Info: {'embedding': {1: (1731, 4238, 4239), 0: (1672, 4178, 1671), 2: (1581, 4058, 1582), 3: (1626, 4073, 1627), 4: (1642, 1641, 4298), 5: (4118, 4117), 6: (1536, 4208), 7: (1566, 4163, 1567), 8: (1596, 1597), 9: (4254, 4253, 1506), 10: (1611, 1612), 11: (4282, 4283, 1716), 12: (4193, 1686), 13: (1701, 4148), 14: (4133, 4132), 15: (1551, 4223), 16: (4267, 4268, 1521)}, 'chain_break_method': 'majority_vote', 'embedding_parameters': {}, 'chain_strength': 1679.5169273966146}

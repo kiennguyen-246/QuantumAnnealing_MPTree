@@ -22,14 +22,28 @@ def add_qubo(q1=defaultdict, q2=defaultdict, size=0):
             q1[(i, j)] += q2[(i, j)]
     return q1
 
-def sum_max_1(q=defaultdict, size=0, x=0, y=0, z=0, __lambda=1):
+def add_bitwise_or(q=defaultdict, size=0, x=0, y=0, z=0, __lambda=1):
     """
-    Constraint: max(1, x + y) = z, quadratic form: H = x^2 + y^2 + z^2 + xy - 2xz - 2yz
+    Constraint: x | y = z
+    Quadratic form: H = x^2 + y^2 + z^2 + xy - 2xz - 2yz
     """
     q[(x, x)] += __lambda
     q[(y, y)] += __lambda
     q[(z, z)] += __lambda
     q[(x, y)] += __lambda
+    q[(x, z)] -= 2 * __lambda
+    q[(y, z)] -= 2 * __lambda
+    return q
+
+def add_bitwise_or_exc_11(q=defaultdict, size=0, x=0, y=0, z=0, __lambda=1):
+    """
+    Constraint: x | y = z excluding x = 1, y = 1
+    Quadratic form: H = x^2 + y^2 + z^2 + 2xy - 2xz - 2yz
+    """
+    q[(x, x)] += __lambda
+    q[(y, y)] += __lambda
+    q[(z, z)] += __lambda
+    q[(x, y)] += 2 * __lambda
     q[(x, z)] -= 2 * __lambda
     q[(y, z)] -= 2 * __lambda
     return q

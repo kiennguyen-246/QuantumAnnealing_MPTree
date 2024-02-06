@@ -16,7 +16,7 @@ def get_embedding(bqm, output):
     while trials < 50:
         trials += 1
         embedding = minorminer.find_embedding(source_edgelist, target_edgelist, verbose=2, max_no_improvement=20,
-                                              random_seed=trials, chainlength_patience=20, timeout=600)
+                                              random_seed=trials, chainlength_patience=20, timeout=300)
         if len(embedding.keys()) == 0:
             print("Failed", trials)
             continue

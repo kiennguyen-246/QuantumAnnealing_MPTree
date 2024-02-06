@@ -82,11 +82,14 @@ def getAns(v_e_list=None,
     # counter(g=g, terminals=terminals, n_trials=10)
     print("\n\n\n\n\n------------------------\n")
 
+    # ans = lucas(g=g, terminals=terminals,
+    #              __lambda=max([g[u][v]['weight'] for (u, v) in g.edges]) + 1,
+    #              )["ans"]
     ans = fowler(g=g, terminals=terminals, root=root,
                  __lambda=len(g.nodes) * max([g[u][v]['weight'] for (u, v) in g.edges]) + 1,
                  )["ans"]
 
-    # ans = sridhar_lam_blelloch_ravi_schwartz_ilp(g=g, terminals=terminals, root=root)["ans"]
+    # ans = ilp(g=g, terminals=terminals, root=root)["ans"]
 
     print(ans)
     ans_edges = []

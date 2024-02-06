@@ -19,9 +19,7 @@ output_path = "output/sequences/"
 
 def lucas(g, terminals,
           numReads=1000,
-          __lambda=1,
-          chainStrengthPrefactor=0.3,
-          annealing_time=200):
+          __lambda=1):
     """
     https://www.frontiersin.org/articles/10.3389/fphy.2014.00005/full
     """
@@ -31,6 +29,7 @@ def lucas(g, terminals,
     m = len(g.edges)
     edgeList = list(g.edges)
     udiEdgeList = list(filter(lambda x: x[0] < x[1], edgeList))
+    method = "L_"
 
     def inEdgeList(u, v):
         return (u, v) in edgeList
@@ -202,29 +201,44 @@ def lucas(g, terminals,
     q = add_qubo(q1=q, q2=objective()["q"], size=qSize)
     offset += objective()["offset"]
 
+    print(q)
+
     # Solve QUBO with D-Wave
-    chainStrength = uniform_torque_compensation(
-        bqm=BinaryQuadraticModel.from_qubo(q), prefactor=chainStrengthPrefactor)
-    sampler = LazyFixedEmbeddingComposite(DWaveSampler())
-    response = sampler.sample_qubo(q,
-                                   chain_strength=chainStrength,
-                                   num_reads=numReads,
-                                   label='Steiner Tree Soltuion',
-                                   annealing_time=annealing_time)
-    dwave.inspector.show(response)
+    bqm = BinaryQuadraticModel.from_qubo(q, offset)
+    print("Number of non-zero elements in QUBO matrix: {}".format(len(q)))
+    response = solve_quantum_annealing(bqm=bqm, method=method, num_reads=numReads)
 
     reportFile.write("## Result\n")
     reportTable(reportFile=reportFile, response=response)
+    optimal = 0
     success = 0
     sample = response.record.sample[0]
-    result = response.record.energy[0] + offset
+    result = 1e9
     for i in range(0, len(response.record.sample)):
-        if (response.record.energy[i] + offset < result):
+        if response.record.energy[i] < result:
             sample = response.record.sample[i]
-            result = response.record.energy[i] + offset
-            success = 1
-        elif (response.record.energy[i] + offset == result):
+            result = response.record.energy[i]
+            optimal = response.record.num_occurrences[i]
+        elif response.record.energy[i] == result:
+            optimal += response.record.num_occurrences[i]
+        pen1 = calculate(q=constraint1()["q"], offset=constraint1()["offset"], x=response.record.sample[i])
+        pen2 = calculate(q=constraint2()["q"], offset=constraint2()["offset"], x=response.record.sample[i])
+        pen3 = calculate(q=constraint3()["q"], offset=constraint3()["offset"], x=response.record.sample[i])
+        pen4 = calculate(q=constraint4()["q"], offset=constraint4()["offset"], x=response.record.sample[i])
+        pen5 = calculate(q=constraint5()["q"], offset=constraint5()["offset"], x=response.record.sample[i])
+        pen6 = calculate(q=constraint6()["q"], offset=constraint6()["offset"], x=response.record.sample[i])
+        if (pen1 == 0
+                and pen2 == 0
+                and pen3 == 0
+                and pen4 == 0
+                and pen5 == 0
+                and pen6 == 0):
             success += response.record.num_occurrences[i]
+            print(pen1, pen2, pen3, pen4, pen5, pen6)
+    optimal_val = ilp(g, terminals, terminals[0])["objective"]
+    # print("Comparison:", result, optimal_val)
+    if result != optimal_val:
+        optimal = 0
 
     print(len(sample))
     penalty1 = calculate(q=constraint1()["q"], offset=constraint1()["offset"], x=sample)
@@ -233,13 +247,14 @@ def lucas(g, terminals,
     penalty4 = calculate(q=constraint4()["q"], offset=constraint4()["offset"], x=sample)
     penalty5 = calculate(q=constraint5()["q"], offset=constraint5()["offset"], x=sample)
     penalty6 = calculate(q=constraint6()["q"], offset=constraint6()["offset"], x=sample)
+    objectiveVal = calculate(q=objective()["q"], offset=objective()["offset"], x=sample)
     print("Penalty 1: {}".format(penalty1))
     print("Penalty 2: {}".format(penalty2))
     print("Penalty 3: {}".format(penalty3))
     print("Penalty 4: {}".format(penalty4))
     print("Penalty 5: {}".format(penalty5))
     print("Penalty 6: {}".format(penalty6))
-    objectiveVal = calculate(q=objective()["q"], offset=objective()["offset"], x=sample)
+    print("Objective: {}".format(objectiveVal))
     if (penalty1 != 0
             or penalty2 != 0
             or penalty3 != 0
@@ -254,24 +269,27 @@ def lucas(g, terminals,
     for (u, v) in udiEdgeList:
         if (sample[get("ye", param1=u, param2=v)] == 1):
             print("({}, {})".format(u, v))
-            ans.append((u, v))
-    if (result != 15):
-        success = 0
-    print("Success rate: {}/{}".format(success, numReads))
+            ans.append((u, v, g[u][v]['weight']))
+    print("Steiner tree creation rate: {}/{}".format(success, numReads))
+    print("Optimal rate: {}/{}".format(optimal, numReads))
+
+    print(ans)
 
     return {
         "ans": ans,
         "success_rate": success,
+        "optimal_rate": optimal,
     }
 
+
 def fowler(g, terminals, root=0,
-                    __lambda=1):
+           __lambda=1):
     """
     https://www.researchgate.net/profile/Alex-Fowler/publication/322634540_Improved_QUBO_Formulations_for_D-Wave_Quantum_Computing/links/5a65547caca272a1581f2809/Improved-QUBO-Formulations-for-D-Wave-Quantum-Computing.pdf
     Constraint 3 is improved
     """
     num_reads = 1000
-    method = "F2_"
+    method = "F_"
 
     # First initialization
     report_file = open("steinerTree_response.md", "w")
@@ -295,11 +313,13 @@ def fowler(g, terminals, root=0,
         for v in range(u + 1, n):
             if u != root and v != root:
                 var_map.append(("x", u, v))
-    for v in terminals:
-        if v != root:
-            for i in range(1, len(g.adj[v])):
-                var_map.append(("s", v, i))
-                # print("s", v, i)
+    for v in g.nodes:
+        if v in terminals and v == root:
+            continue
+        for i in range(1, len(g.adj[v])):
+            var_map.append(("s", v, i))
+            if v not in terminals and i != len(g.adj[v]) - 1:
+                var_map.append(("t", v, i))
 
     # Get the position of a variable in the QUBO
     def get(var="e", param1=0, param2=0):
@@ -327,14 +347,15 @@ def fowler(g, terminals, root=0,
         """
         q = defaultdict(int)
         offset = 0
+        ext_coef = 1
         for u in range(0, n):
             for v in range(u + 1, n):
                 for w in range(v + 1, n):
                     if (u == root or v == root or w == root): continue
-                    q[(get("x", u, w), get("x", u, w))] += 4 * A
-                    q[(get("x", u, v), get("x", v, w))] += 4 * A
-                    q[(get("x", u, v), get("x", u, w))] -= 4 * A
-                    q[(get("x", u, w), get("x", v, w))] -= 4 * A
+                    q[(get("x", u, w), get("x", u, w))] += ext_coef * A
+                    q[(get("x", u, v), get("x", v, w))] += ext_coef * A
+                    q[(get("x", u, v), get("x", u, w))] -= ext_coef * A
+                    q[(get("x", u, w), get("x", v, w))] -= ext_coef * A
         return {
             "q": q,
             "offset": offset
@@ -346,12 +367,13 @@ def fowler(g, terminals, root=0,
         """
         q = defaultdict(int)
         offset = 0
+        ext_coef = 1
         for (u, v) in edge_list_root_sepc:
             if (u >= v): continue
             if (u == root or v == root): continue
-            q[(get("e", u, v), get("e", u, v))] += 11 * A
-            q[(get("e", u, v), get("x", u, v))] -= 11 * A
-            q[(get("e", v, u), get("x", u, v))] += 11 * A
+            q[(get("e", u, v), get("e", u, v))] += ext_coef * A
+            q[(get("e", u, v), get("x", u, v))] -= ext_coef * A
+            q[(get("e", v, u), get("x", u, v))] += ext_coef * A
         return {
             "q": q,
             "offset": offset
@@ -363,21 +385,25 @@ def fowler(g, terminals, root=0,
         """
         q = defaultdict(int)
         offset = 0
+        ext_coef = 1
         if method == "F_":
             for v in terminals:
                 if (v == root): continue
                 coef2 = [0] * qSize
                 for u in g.adj[v]:
                     coef2[get("e", u, v)] += 1
-                q = add_qubo(q1=q, q2=square(coef=coef2, freeCoef=-1, size=qSize, __lambda=A)["q"], size=qSize)
-                offset += square(coef=coef2, freeCoef=-1, size=qSize, __lambda=A)["offset"]
+                q = add_qubo(q1=q, q2=square(coef=coef2, freeCoef=-1, size=qSize, __lambda=ext_coef * A)["q"],
+                             size=qSize)
+                offset += square(coef=coef2, freeCoef=-1, size=qSize, __lambda=ext_coef * A)["offset"]
         else:
             for v in terminals:
                 if v == root: continue
                 adj = list(g.adj[v])
-                q = sum_max_1(q=q, x=get("e", adj[0], v), y=get("e", adj[1], v), z=get("s", v, 1), __lambda=7 * A)
+                q = add_bitwise_or_exc_11(q=q, x=get("e", adj[0], v), y=get("e", adj[1], v), z=get("s", v, 1),
+                                          __lambda=ext_coef * A)
                 for i in range(2, len(adj)):
-                    q = sum_max_1(q=q, x=get("s", v, i - 1), y=get("e", adj[i], v), z=get("s", v, i), __lambda=7 * A)
+                    q = add_bitwise_or_exc_11(q=q, x=get("s", v, i - 1), y=get("e", adj[i], v), z=get("s", v, i),
+                                              __lambda=ext_coef * A)
         return {
             "q": q,
             "offset": offset
@@ -389,14 +415,26 @@ def fowler(g, terminals, root=0,
         """
         q = defaultdict(int)
         offset = 0
-        for v in range(0, n):
-            if v in terminals:
-                continue
-            for u in g.adj[v]:
-                for w in g.adj[v]:
-                    if u == w:
-                        continue
-                    q[(get("e", u, v), get("e", w, v))] += A * n
+        ext_coef = 1
+        if method == "F_":
+            for v in range(0, n):
+                if v in terminals:
+                    continue
+                for u in g.adj[v]:
+                    for w in g.adj[v]:
+                        if u == w:
+                            continue
+                        q[(get("e", u, v), get("e", w, v))] += ext_coef * A * n
+        else:
+            for v in g.nodes:
+                if v in terminals or v == root:
+                    continue
+                adj = list(g.adj[v])
+                q = add_bitwise_or_exc_11(q=q, x=get("e", adj[0], v), y=get("e", adj[1], v), z=get("s", v, 1),
+                                          __lambda=ext_coef * A)
+                for i in range(2, len(adj)):
+                    q = add_bitwise_or_exc_11(q=q, x=get("s", v, i - 1), y=get("e", adj[i], v), z=get("s", v, i),
+                                              __lambda=ext_coef * A)
         return {
             "q": q,
             "offset": offset
@@ -408,23 +446,51 @@ def fowler(g, terminals, root=0,
         """
         q = defaultdict(int)
         offset = 0
-        for v in range(0, n):
-            if (v in terminals):
-                continue
-            coef1 = [0] * qSize
-            coef2 = [0] * qSize
-            for u in g.adj[v]:
-                coef1[get("e", u, v)] -= 1
-            freeCoef1 = 1
-            for u in g.adj[v]:
-                if (u == root): continue
-                coef2[get("e", v, u)] += 1
-            q = add_qubo(q1=q, q2=mul(coef1=coef1, freeCoef1=freeCoef1,
-                                      coef2=coef2,
-                                      size=qSize, __lambda=A)["q"], size=qSize)
-            offset += mul(coef1=coef1, freeCoef1=freeCoef1,
-                          coef2=coef2,
-                          size=qSize, __lambda=A)["offset"]
+        ext_coef = 1
+        if method == "F_":
+            for v in range(0, n):
+                if v in terminals:
+                    continue
+                coef1 = [0] * qSize
+                coef2 = [0] * qSize
+                for u in g.adj[v]:
+                    coef1[get("e", u, v)] -= 1
+                freeCoef1 = 1
+                for u in g.adj[v]:
+                    if (u == root): continue
+                    coef2[get("e", v, u)] += 1
+                q = add_qubo(q1=q, q2=mul(coef1=coef1, freeCoef1=freeCoef1,
+                                          coef2=coef2,
+                                          size=qSize, __lambda=ext_coef * A)["q"], size=qSize)
+                offset += mul(coef1=coef1, freeCoef1=freeCoef1,
+                              coef2=coef2,
+                              size=qSize, __lambda=ext_coef * A)["offset"]
+        else:
+            for v in g.nodes:
+                if v in terminals or v == root:
+                    continue
+                adj = list(g.adj[v])
+                if root in adj:
+                    adj.remove(root)
+                if len(adj) > 2:
+                    q = add_bitwise_or(q=q, x=get("e", v, adj[0]), y=get("e", v, adj[1]), z=get("t", v, 1),
+                                       __lambda=ext_coef * A)
+                elif len(adj) > 1:
+                    q = add_bitwise_or(q=q, x=get("e", v, adj[0]), y=get("e", v, adj[1]),
+                                       z=get("s", v, len(g.adj[v]) - 1),
+                                       __lambda=ext_coef * A)
+                else:
+                    q = add_bitwise_or(q=q, x=get("e", v, adj[0]), y=get("e", v, adj[0]),
+                                       z=get("s", v, len(g.adj[v]) - 1),
+                                       __lambda=ext_coef * A)
+                for i in range(2, len(adj)):
+                    if i != len(adj) - 1:
+                        q = add_bitwise_or(q=q, x=get("t", v, i - 1), y=get("e", v, adj[i]), z=get("t", v, i),
+                                           __lambda=ext_coef * A)
+                    else:
+                        q = add_bitwise_or(q=q, x=get("t", v, i - 1), y=get("e", v, adj[i]),
+                                           z=get("s", v, len(g.adj[v]) - 1),
+                                           __lambda=ext_coef * A)
         return {
             "q": q,
             "offset": offset
@@ -456,12 +522,13 @@ def fowler(g, terminals, root=0,
     q = add_qubo(q1=q, q2=objective()["q"], size=qSize)
     offset += objective()["offset"]
 
+    print("Number of non-zero elements in QUBO matrix: {}".format(len(q)))
     bqm = BinaryQuadraticModel.from_qubo(q, offset)
     # print(q)
     # print(bqm)
 
     fixed_var_map = var_map.copy()
-    if method == "F2_":
+    if method == "N_":
         for v in terminals:
             if v != root:
                 if len(g.adj[v]) == 1:
@@ -476,16 +543,17 @@ def fowler(g, terminals, root=0,
     print(fixed_var_map)
 
     # Solve QUBO with D-Wave
-    response = solve_quantum_annealing(bqm=bqm, method="F2_", num_reads=num_reads)
+    response = solve_quantum_annealing(bqm=bqm, method=method, num_reads=num_reads)
 
     # # Solve QUBO with Simulated Annealing
-    # response = solve_simulated_annealing(bqm=bqm, num_reads=num_reads, method="F2_")
+    # response = solve_simulated_annealing(bqm=bqm, method=method, num_reads=num_reads)
 
     # Analyze result
     report_file.write("## Result\n")
     reportTable(reportFile=report_file, response=response)
     success = 0
     optimal = 0
+    optimal_val = ilp(g, terminals, root)["objective"]
     sample = response.record.sample[0]
     result = 1e9
     satisfy1 = 0
@@ -515,15 +583,15 @@ def fowler(g, terminals, root=0,
                 and pen4 == 0
                 and pen5 == 0):
             success += response.record.num_occurrences[i]
-        if (pen1 == 0):
+        if pen1 == 0:
             satisfy1 += response.record.num_occurrences[i]
-        if (pen2 == 0):
+        if pen2 == 0:
             satisfy2 += response.record.num_occurrences[i]
-        if (pen3 == 0):
+        if pen3 == 0:
             satisfy3 += response.record.num_occurrences[i]
-        if (pen4 == 0):
+        if pen4 == 0:
             satisfy4 += response.record.num_occurrences[i]
-        if (pen5 == 0):
+        if pen5 == 0:
             satisfy5 += response.record.num_occurrences[i]
         # print(pen1, pen2, pen3, pen4, pen5, obj, response.record.energy[i])
         if response.record.energy[i] < result:
@@ -532,6 +600,8 @@ def fowler(g, terminals, root=0,
             optimal = response.record.num_occurrences[i]
         elif response.record.energy[i] == result:
             optimal += response.record.num_occurrences[i]
+        if result != optimal_val:
+            optimal = 0
     print(result)
 
     # print(len(sample), len(var_map))
@@ -547,8 +617,10 @@ def fowler(g, terminals, root=0,
             x.append(sample[fixed_var_map.index(var_map[j])])
         else:
             x.append(1)
+    # x[get("e", 0, 1)] = 1
 
-    for i in range(0, len(sample)): print(var_map[i], "=", sample[i])
+    for i in range(0, len(sample)):
+        print(fixed_var_map[i], "=", sample[i])
     penalty1 = calculate(q=constraint1()["q"], offset=constraint1()["offset"], x=x)
     penalty2 = calculate(q=constraint2()["q"], offset=constraint2()["offset"], x=x)
     penalty3 = calculate(q=constraint3()["q"], offset=constraint3()["offset"], x=x)
@@ -594,7 +666,8 @@ def fowler(g, terminals, root=0,
     return ans_dict
 
 
-def sridhar_lam_blelloch_ravi_schwartz_ilp(g, terminals, root=0):
+def ilp(g, terminals, root=0):
+    print("Running ILP")
     print(g)
     print(g.edges)
     print(terminals)
@@ -672,7 +745,8 @@ def sridhar_lam_blelloch_ravi_schwartz_ilp(g, terminals, root=0):
     # for var in variables:
     #     print(var["label"], var["var"].value)
     return {
-        "ans": ans
+        "ans": ans,
+        "objective": model.options.objfcnval
     }
 
 
@@ -697,9 +771,7 @@ def readInput(file):
             terminals.append(int(line.split()[i]))
     return g, terminals
 
+
 # g, terminals = readInput("steiner.inp")
 # fowler(g=g, terminals=terminals, root=terminals[0],
-#        numReads=1000,
-#        __lambda=len(g.nodes) * max([g[u][v]['weight'] for (u, v) in g.edges]) + 1,
-#        chainStrengthPrefactor=0.3,
-#        annealing_time=200)
+#        __lambda=len(g.nodes) * max([g[u][v]['weight'] for (u, v) in g.edges]) + 1)
