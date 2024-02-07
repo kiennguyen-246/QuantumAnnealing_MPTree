@@ -144,39 +144,46 @@ if __name__ == '__main__':
     ROOT = os.getcwd()
     file_list = os.listdir(ROOT)
     # input_seqs = SequenceReader.read_input('sequences.inp')
-    input_seqs = SequenceReader.read_input_phy('data_treebase/dna_M667_218_1002.phy')
-    stat = SequenceReader.statistic_module(input_seqs)
-    # print(input_seqs)
-    terminals = input_seqs[:4]
-    for idx, term in enumerate(terminals):
-        print(f"{idx}) {term}")
-    int_nodes = []
-    for seqs in combinations(terminals, 3):
-        # print(seqs)
-        int_nodes.append(Triplet(seqs[0], seqs[1], seqs[2]).consensus_2(stat))
+    for directory in os.listdir(ROOT + '/data_treebase'):
+        if ".phy" not in directory:
+            continue
+        if directory < "dna_M1110_330_1711.phy":
+            continue
+        print(directory)
+        os.environ['PHYLO_FILE'] = directory
+        input_seqs = SequenceReader.read_input_phy('data_treebase/' + directory)
+        stat = SequenceReader.statistic_module(input_seqs)
+        # print(input_seqs)
+        terminals = input_seqs[:4]
+        for idx, term in enumerate(terminals):
+            print(f"{idx}) {term}")
+        int_nodes = []
+        for seqs in combinations(terminals, 3):
+            # print(seqs)
+            int_nodes.append(Triplet(seqs[0], seqs[1], seqs[2]).consensus_2(stat))
 
-    # Remove duplicates
-    print(f'Original internal nodes:{len(int_nodes)}')
-    # print(int_nodes)
-    int_nodes = list(set(int_nodes))
-    print(f'Generated {len(int_nodes)} internal nodes as:')
-    for idx, node in enumerate(int_nodes):
-        print(f"{idx}) {node}")
+        # Remove duplicates
+        print(f'Original internal nodes:{len(int_nodes)}')
+        # print(int_nodes)
+        int_nodes = list(set(int_nodes))
+        print(f'Generated {len(int_nodes)} internal nodes as:')
+        for idx, node in enumerate(int_nodes):
+            print(f"{idx}) {node}")
 
-    v_e_list = []
-    for pairs in combinations(terminals + int_nodes, 2):
-        # print(len())
-        pairs_w = list(pairs) + [Edge(pairs).hamming_distance()]
-        v_e_list.append(pairs_w)
-    print(v_e_list)
+        v_e_list = []
+        for pairs in combinations(terminals + int_nodes, 2):
+            # print(len())
+            pairs_w = list(pairs) + [Edge(pairs).hamming_distance()]
+            v_e_list.append(pairs_w)
+        print(v_e_list)
 
-    ans = getAns(v_e_list=v_e_list,
-           seqList=terminals + int_nodes,
-           terminals=terminals)
+        ans = getAns(v_e_list=v_e_list,
+               seqList=terminals + int_nodes,
+               terminals=terminals)
 
-    print("\n\n\n------------------------")
+        print("\n\n\n------------------------")
 
-    print(ans)
+        print(ans)
 
 
     # # Graph

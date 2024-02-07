@@ -1,3 +1,5 @@
+import json
+import os
 import time
 
 import dimod
@@ -14,7 +16,7 @@ from utils import *
 import numpy as np
 from gekko import GEKKO
 
-output_path = "output/sequences/"
+output_path = "output/"
 
 
 def lucas(g, terminals,
@@ -274,12 +276,22 @@ def lucas(g, terminals,
 
     print(ans)
 
-    return {
+    ans_dict = {
         "ans": ans,
+        "energy": result,
         "non_zero": len(q),
-        "success_rate": success,
-        "optimal_rate": optimal,
+        "success_rate": int(success),
+        "optimal_rate": int(optimal),
     }
+
+    data_name = os.environ.get("PHYLO_FILE")
+    output_dir = "output/" + data_name + "/"
+    if not os.path.exists(output_dir):
+        os.makedirs(output_dir)
+    with open(output_dir + os.getenv("SOLVER_CONFIG") + "_2.json", "w") as f:
+        json.dump(ans_dict, f, indent=4)
+
+    return ans_dict
 
 
 def fowler(g, terminals, root=0,
@@ -599,12 +611,21 @@ def fowler(g, terminals, root=0,
     print("Optimal rate: {}/{}".format(optimal, num_reads))
     ans_dict = {
         "ans": ans,
+        "energy": result,
         "non_zero": len(q),
-        "success_rate": success,
-        "optimal_rate": optimal,
-        "satisfy_stats": [satisfy1, satisfy2, satisfy3, satisfy4, satisfy5],
+        "success_rate": int(success),
+        "optimal_rate": int(optimal),
+        "satisfy_stats": [int(satisfy1), int(satisfy2), int(satisfy3), int(satisfy4), int(satisfy5)],
     }
+    data_name = os.environ.get("PHYLO_FILE")
+    output_dir = "output/" + data_name + "/"
+    if not os.path.exists(output_dir):
+        os.makedirs(output_dir)
+    with open(output_dir + os.getenv("SOLVER_CONFIG") + "_2.json", "w") as f:
+        json.dump(ans_dict, f, indent=4)
     return ans_dict
+
+
 def nghiem(g, terminals, root=0,
            __lambda=1):
     """
@@ -958,11 +979,19 @@ def nghiem(g, terminals, root=0,
     print("Optimal rate: {}/{}".format(optimal, num_reads))
     ans_dict = {
         "ans": ans,
+        "energy": result,
         "non_zero": len(q),
-        "success_rate": success,
-        "optimal_rate": optimal,
-        "satisfy_stats": [satisfy1, satisfy2, satisfy3, satisfy4, satisfy5],
+        "success_rate": int(success),
+        "optimal_rate": int(optimal),
+        "satisfy_stats": [int(satisfy1), int(satisfy2), int(satisfy3), int(satisfy4), int(satisfy5)],
     }
+    data_name = os.environ.get("PHYLO_FILE")
+    output_dir = "output/" + data_name + "/"
+    if not os.path.exists(output_dir):
+        os.makedirs(output_dir)
+    with open(output_dir + os.getenv("SOLVER_CONFIG") + "_2.json", "w") as f:
+        json.dump(ans_dict, f, indent=4)
+
     return ans_dict
 
 

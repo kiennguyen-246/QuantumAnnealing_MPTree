@@ -10,10 +10,6 @@ import dwave.inspector
 
 from src.export_embedding import get_embedding
 
-data_name = "sequences"
-output_dir = "output/" + data_name + "/"
-
-
 def solve_quantum_annealing(bqm,
                             method="?_",
                             num_reads=1000):
@@ -29,12 +25,17 @@ def solve_quantum_annealing(bqm,
     embed_config = method + str(num_reads) + "-" + str(chain_strength)
     solver_config = method + str(num_reads) + "-" + str(chain_strength) + "s" + str(anneal_schedule_id) + "_A" + str(
         annealing_time)
-    # get_embedding(bqm, output_dir + embed_config + ".json")
-    # with open(output_dir + embed_config + ".json", "r") as f:
-    #     embedding = json.load(f)
-    # embedding = {int(k): v for k, v in embedding.items()}
-    # sampler = FixedEmbeddingComposite(DWaveSampler(), embedding=embedding)
-    sampler = EmbeddingComposite(DWaveSampler())
+    os.environ["SOLVER_CONFIG"] = solver_config
+    data_name = os.getenv("PHYLO_FILE")
+    output_dir = "output/" + data_name + "/"
+    if not os.path.exists(output_dir):
+        os.makedirs(output_dir)
+    get_embedding(bqm, output_dir + embed_config + ".json")
+    with open(output_dir + embed_config + ".json", "r") as f:
+        embedding = json.load(f)
+    embedding = {int(k): v for k, v in embedding.items()}
+    sampler = FixedEmbeddingComposite(DWaveSampler(), embedding=embedding)
+    # sampler = EmbeddingComposite(DWaveSampler())
 
     start = time.time()
     if anneal_schedule_id == -1:
@@ -52,26 +53,41 @@ def solve_quantum_annealing(bqm,
                                   # annealing_time=annealing_time,
                                   anneal_schedule=schedule)
     end = time.time()
-    dwave.inspector.show(response)
+    # dwave.inspector.show(response)
     chains = response.info["embedding_context"]["embedding"].values()
     # for chain in chains:
     #     if len(chain) > 10:
     #         print(chain)
 
-    if not os.path.exists(output_dir):
-        os.makedirs(output_dir)
-    file_response_output = open(output_dir + solver_config + ".txt", "w")
-    file_response_output.write("Config: " + solver_config + "\n")
-    file_response_output.write("Number of source variables: " + str(len(bqm.variables)) + "\n")
-    file_response_output.write("Number of target variables: " + str(sum([len(chain) for chain in chains])) + "\n")
-    file_response_output.write("Time Elapsed: " + str(end - start) + "\n")
-    file_response_output.write(
-        "Best State: " + str(response.record.sample[0]) + "\n" + str(response.record.energy[0]) + "\t" + str(
-            response.record.chain_break_fraction[0]) + "\n")
-    file_response_output.write("ChainStr/ChainLen: " + str(chain_strength) + "/" + str(
-        max([len(chain) for chain in chains])) + "\n")
-    file_response_output.write("Info: " + str(response.info["timing"]) + "\n")
-    file_response_output.write("Embedding Info: " + str(response.info["embedding_context"]) + "\n")
+    config_dict = {
+        "config": solver_config,
+        "num_vars": len(bqm.variables),
+        "num_qubit": sum([len(chain) for chain in chains]),
+        "time_elapsed": end - start,
+        "best_state": {
+            "sample": response.record.sample[0].tolist(),
+            "energy": response.record.energy[0],
+            "chain_break_fraction": response.record.chain_break_fraction[0],
+        },
+        "chain_strength": chain_strength,
+        "max_chain_length": max([len(chain) for chain in chains]),
+        "timing_info": response.info["timing"],
+        "embedding_info": response.info["embedding_context"]
+    }
+    with open(output_dir + solver_config + "_1.json", "w") as f:
+        json.dump(config_dict, f, indent=4)
+    # file_response_output = open(output_dir + solver_config + ".txt", "w")
+    # file_response_output.write("Config: " + solver_config + "\n")
+    # file_response_output.write("Number of source variables: " + str(len(bqm.variables)) + "\n")
+    # file_response_output.write("Number of target variables: " + str(sum([len(chain) for chain in chains])) + "\n")
+    # file_response_output.write("Time Elapsed: " + str(end - start) + "\n")
+    # file_response_output.write(
+    #     "Best State: " + str(response.record.sample[0]) + "\n" + str(response.record.energy[0]) + "\t" + str(
+    #         response.record.chain_break_fraction[0]) + "\n")
+    # file_response_output.write("ChainStr/ChainLen: " + str(chain_strength) + "/" + str(
+    #     max([len(chain) for chain in chains])) + "\n")
+    # file_response_output.write("Info: " + str(response.info["timing"]) + "\n")
+    # file_response_output.write("Embedding Info: " + str(response.info["embedding_context"]) + "\n")
 
     return response
 
