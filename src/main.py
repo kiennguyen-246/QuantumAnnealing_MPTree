@@ -60,7 +60,7 @@ class SequenceReader:
             counter = {'A': 0, 'T': 0, 'C': 0, 'G': 0, '-': 0}
 
             for seq in seq_list:
-                if seq[idx] in {'-', 'M', 'H', 'Y', 'R', 'S'}:
+                if seq[idx] in {'-', 'M', 'H', 'Y', 'R', 'S', 'W', 'K', 'B', 'D', 'V', 'N', '?'}:
                     counter['-'] += 1
                 else:
                     for item in ('A', 'T', 'C', 'G'):
@@ -110,7 +110,7 @@ class Triplet:
         for pos, pos_stat in zip(transposed_sequences, stat):
             idx+=1
             # Count the occurrences of each character at the current position (skip '-')
-            char_counts = Counter(filter(lambda x: x not in {'-', 'M', 'H', 'Y', 'R', 'S'}, pos))
+            char_counts = Counter(filter(lambda x: x not in {'-', 'M', 'H', 'Y', 'R', 'S', 'W', 'K', 'B', 'D', 'V', 'N', '?'}, pos))
 
             # If there is a tie, use the stat to select the highest accuracy nucleotide
             if char_counts:
@@ -147,7 +147,9 @@ if __name__ == '__main__':
     for directory in os.listdir(ROOT + '/data_treebase'):
         if ".phy" not in directory:
             continue
-        if directory < "dna_M1110_330_1711.phy":
+        # if directory <= "dna_M11113_344_9778.phy":
+        #     continue
+        if directory in os.listdir(ROOT + '/output'):
             continue
         print(directory)
         os.environ['PHYLO_FILE'] = directory

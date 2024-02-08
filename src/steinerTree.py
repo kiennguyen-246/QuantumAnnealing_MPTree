@@ -735,8 +735,11 @@ def nghiem(g, terminals, root=0,
         ext_coef = 1
 
         for v in terminals:
-            if v == root: continue
+            if v == root:
+                continue
             adj = list(g.adj[v])
+            if len(adj) <= 1:
+                continue
             q = add_bitwise_or_exc_11(q=q, x=get("e", adj[0], v), y=get("e", adj[1], v), z=get("s", v, 1),
                                       __lambda=ext_coef * A)
             # print("s", v, 1)
@@ -761,6 +764,8 @@ def nghiem(g, terminals, root=0,
             if v in terminals or v == root:
                 continue
             adj = list(g.adj[v])
+            if len(adj) == 1:
+                continue
             q = add_bitwise_or_exc_11(q=q, x=get("e", adj[0], v), y=get("e", adj[1], v), z=get("s", v, 1),
                                       __lambda=ext_coef * A)
             # print("s", v, 1)
@@ -849,14 +854,17 @@ def nghiem(g, terminals, root=0,
     fixed_var_map = var_map.copy()
     for v in terminals:
         if v != root:
+            adj = list(g.adj[v])
+            print(adj)
             if len(g.adj[v]) == 1:
                 # print("e", g.adj[v][0], v)
-                bqm.fix_variable(v=get("e", g.adj[v][0], v), value=1)
-                fixed_var_map.remove(("e", g.adj[v][0], v))
+                print(adj[0])
+                bqm.fix_variable(v=get("e", adj[0], v), value=1)
+                fixed_var_map.remove(("e", adj[0], v))
             else:
                 # print("s", v, len(g.adj[v]) - 1)
-                bqm.fix_variable(v=get("s", v, len(g.adj[v]) - 1), value=1)
-                fixed_var_map.remove(("s", v, len(g.adj[v]) - 1))
+                bqm.fix_variable(v=get("s", v, len(adj) - 1), value=1)
+                fixed_var_map.remove(("s", v, len(adj) - 1))
     # print(len(var_map))
     # print(var_map)
     # print(len(fixed_var_map))
