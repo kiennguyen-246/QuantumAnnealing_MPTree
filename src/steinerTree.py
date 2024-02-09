@@ -42,30 +42,53 @@ def lucas(g, terminals,
     B = 1
     A = __lambda * B
 
+    var_map = []
+    for v in range(0, n):
+        for i in range(0, maxDepth):
+            var_map.append(("xv", i, v))
+        if  v not in terminals:
+            var_map.append(("yv", v))
+    for (u, v) in edgeList:
+        for i in range(1, maxDepth):
+            var_map.append(("xe", i, u, v))
+        if u < v:
+            var_map.append(("ye", u, v))
+
+
     # Get the position of a variable in the QUBO
     def get(var="xv", depth=0, param1=0, param2=0):
         """ xv[i][x]: vertex x at depth i \\
             xe[i][x][y]: edge (x, y), y at depth i and x at depth i - 1 \\
             yv[x]: vertex x is in the tree \\
             ye[x][y]: edge (x, y) is in the tree"""
-        if (var == "xv"):
-            if (depth == 0):
-                return param1
-            return n + (depth - 1) * (n + m) + param1
-        if (var == "xe"):
-            if (inEdgeList(param1, param2) == False):
-                return -1
-            return n + (depth - 1) * (n + m) + n + edgeList.index((param1, param2))
-        if (var == "yv"):
-            return n + (maxDepth - 1) * (n + m) + param1
-        if (var == "ye"):
-            if (inEdgeList(param1, param2) == False):
-                return -1
-            return n + (maxDepth - 1) * (n + m) + n + udiEdgeList.index((param1, param2))
+        # if (var == "xv"):
+        #     if (depth == 0):
+        #         return param1
+        #     return n + (depth - 1) * (n + m) + param1
+        # if (var == "xe"):
+        #     if (inEdgeList(param1, param2) == False):
+        #         return -1
+        #     return n + (depth - 1) * (n + m) + n + edgeList.index((param1, param2))
+        # if (var == "yv"):
+        #     return n + (maxDepth - 1) * (n + m) + param1
+        # if (var == "ye"):
+        #     if (inEdgeList(param1, param2) == False):
+        #         return -1
+        #     return n + (maxDepth - 1) * (n + m) + n + udiEdgeList.index((param1, param2))
+        if var == "xv":
+            return var_map.index((var, depth, param1))
+        if var == "xe":
+            return var_map.index((var, depth, param1, param2))
+        if var == "yv":
+            return var_map.index((var, param1))
+        if var == "ye":
+            return var_map.index((var, param1, param2))
+
 
     # Generate QUBO
     q = defaultdict(int)
-    qSize = (maxDepth + 1) * (n + m) - m - m // 2
+    qSize = len(var_map)
+    print(len(var_map))
     offset = 0
 
     def constraint1():
@@ -203,7 +226,15 @@ def lucas(g, terminals,
     q = add_qubo(q1=q, q2=objective()["q"], size=qSize)
     offset += objective()["offset"]
 
-    # print(q)
+    print(q)
+    for i in range(0, len(var_map)):
+        in_q = False
+        for j in range(0, len(var_map)):
+            if (i, j) in q:
+                in_q = True
+                break
+        if (in_q == False):
+            print(i, var_map[i])
 
     # Solve QUBO with D-Wave
     bqm = BinaryQuadraticModel.from_qubo(q, offset)
@@ -236,7 +267,7 @@ def lucas(g, terminals,
                 and pen5 == 0
                 and pen6 == 0):
             success += response.record.num_occurrences[i]
-            print(pen1, pen2, pen3, pen4, pen5, pen6)
+            # print(pen1, pen2, pen3, pen4, pen5, pen6)
     optimal_val = ilp(g, terminals, terminals[0])["objective"]
     # print("Comparison:", result, optimal_val)
     if result != optimal_val:
@@ -870,11 +901,11 @@ def nghiem(g, terminals, root=0,
     # print(len(fixed_var_map))
     # print(fixed_var_map)
 
-    # Solve QUBO with D-Wave
-    response = solve_quantum_annealing(bqm=bqm, method=method, num_reads=num_reads)
+    # # Solve QUBO with D-Wave
+    # response = solve_quantum_annealing(bqm=bqm, method=method, num_reads=num_reads)
 
-    # # Solve QUBO with Simulated Annealing
-    # response = solve_simulated_annealing(bqm=bqm, method=method, num_reads=num_reads)
+    # Solve QUBO with Simulated Annealing
+    response = solve_simulated_annealing(bqm=bqm, method=method, num_reads=num_reads)
 
     # Analyze result
     report_file.write("## Result\n")
@@ -1110,6 +1141,8 @@ def readInput(file):
     return g, terminals
 
 
-# g, terminals = readInput("steiner.inp")
+g, terminals = readInput("steiner.inp")
+# lucas(g=g, terminals=terminals,
+#        __lambda=len(g.nodes) * max([g[u][v]['weight'] for (u, v) in g.edges]) + 1)
 # nghiem(g=g, terminals=terminals, root=terminals[0],
 #        __lambda=len(g.nodes) * max([g[u][v]['weight'] for (u, v) in g.edges]) + 1)

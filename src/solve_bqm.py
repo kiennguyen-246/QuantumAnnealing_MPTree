@@ -95,13 +95,27 @@ def solve_quantum_annealing(bqm,
 def solve_simulated_annealing(bqm, method="?_", num_reads=1000):
     sampler = SimulatedAnnealingSampler()
     # beta_range = [0.1, 4]
-    num_sweeps = 1000
+    num_sweeps = 100
     # config = method + str(num_reads) + "-SA" + "".join(str(beta_range).split(" ")) + "s" + str(num_sweeps)
-    config = method + str(num_reads) + "-SA" + "s" + str(num_sweeps)
+    solver_config = method + str(num_reads) + "-SA" + "s" + str(num_sweeps)
+    os.environ["SOLVER_CONFIG"] = solver_config
+    data_name = os.getenv("PHYLO_FILE")
+    output_dir = "output/" + data_name + "/"
+    if not os.path.exists(output_dir):
+        os.makedirs(output_dir)
     # print(config)
+    start = time.time()
     response = sampler.sample(bqm,
                               num_reads=num_reads,
-                              label=config,
+                              label=solver_config,
                               # beta_range=beta_range,
                               num_sweeps=num_sweeps)
+    end = time.time()
+    config_dict = {
+        "config": solver_config,
+        "num_vars": len(bqm.variables),
+        "time_elapsed": end - start,
+    }
+    with open(output_dir + solver_config + "_1.json", "w") as f:
+        json.dump(config_dict, f, indent=4)
     return response

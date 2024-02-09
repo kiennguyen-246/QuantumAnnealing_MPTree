@@ -24,6 +24,18 @@ def makeGraph(v_e_list=None,
             g.add_edge(u1, v1, weight=w)
             g.add_edge(v1, u1, weight=w)
         terminals = [convertSeqToIndex(i, seqList) for i in terminals]
+
+    map_dict = {}
+    for i in range(0, len(seqList)):
+        map_dict[i] = seqList[i]
+    output_path = "output"
+    data_name = os.getenv("PHYLO_FILE")
+    output_dir = output_path + "/" + data_name + "/"
+    if not os.path.exists(output_dir):
+        os.makedirs(output_dir)
+    with open(output_dir + "map.json", "w") as f:
+        json.dump(map_dict, f, indent=4)
+
     g1 = nx.DiGraph()
     for i in range(0, len(g.nodes)):
         g1.add_node(i)
