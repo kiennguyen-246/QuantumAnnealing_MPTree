@@ -13,7 +13,7 @@ from src.export_embedding import get_embedding
 def solve_quantum_annealing(bqm,
                             method="?_",
                             num_reads=1000):
-    chain_strength_prefactor = 0.3
+    chain_strength_prefactor = 0.1
     annealing_time = 200
     anneal_schedule_id = -1
     chain_strength = uniform_torque_compensation(
@@ -27,6 +27,7 @@ def solve_quantum_annealing(bqm,
         annealing_time)
     os.environ["SOLVER_CONFIG"] = solver_config
     data_name = os.getenv("PHYLO_FILE")
+    # data_name = ""
     output_dir = "output/" + data_name + "/"
     if not os.path.exists(output_dir):
         os.makedirs(output_dir)
@@ -69,6 +70,7 @@ def solve_quantum_annealing(bqm,
             "energy": response.record.energy[0],
             "chain_break_fraction": response.record.chain_break_fraction[0],
         },
+        "chain_strength_prefactor": chain_strength_prefactor,
         "chain_strength": chain_strength,
         "max_chain_length": max([len(chain) for chain in chains]),
         "timing_info": response.info["timing"],

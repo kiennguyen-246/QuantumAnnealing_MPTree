@@ -1,0 +1,61 @@
+{
+    "config": "N_1000-21.0s-1_A200",
+    "num_vars": 7,
+    "num_qubit": 7,
+    "time_elapsed": 0.010963201522827148,
+    "best_state": {
+        "sample": [
+            1,
+            1,
+            0,
+            0,
+            1,
+            1,
+            0
+        ],
+        "energy": 7.0,
+        "chain_break_fraction": 0.0
+    },
+    "chain_strength_prefactor": 0.5,
+    "chain_strength": 21.0,
+    "max_chain_length": 1,
+    "timing_info": {
+        "qpu_sampling_time": 290520.0,
+        "qpu_anneal_time_per_sample": 200.0,
+        "qpu_readout_time_per_sample": 69.98,
+        "qpu_access_time": 306281.97,
+        "qpu_access_overhead_time": 1238.03,
+        "qpu_programming_time": 15761.97,
+        "qpu_delay_time_per_sample": 20.54,
+        "total_post_processing_time": 106.0,
+        "post_processing_overhead_time": 106.0
+    },
+    "embedding_info": {
+        "embedding": {
+            "5": [
+                754
+            ],
+            "6": [
+                3648
+            ],
+            "7": [
+                769
+            ],
+            "1": [
+                798
+            ],
+            "3": [
+                783
+            ],
+            "2": [
+                3709
+            ],
+            "0": [
+                784
+            ]
+        },
+        "chain_break_method": "majority_vote",
+        "embedding_parameters": {},
+        "chain_strength": 21.0
+    }
+}

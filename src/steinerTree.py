@@ -8,6 +8,7 @@ from dwave.system.samplers import DWaveSampler
 from dwave.system.composites import LazyFixedEmbeddingComposite
 from dwave.embedding.chain_strength import uniform_torque_compensation
 from dimod.binary import BinaryQuadraticModel
+from minorminer.utils import DisconnectedChainError
 from neal import SimulatedAnnealingSampler
 import dwave.inspector
 
@@ -901,11 +902,16 @@ def nghiem(g, terminals, root=0,
     # print(len(fixed_var_map))
     # print(fixed_var_map)
 
-    # # Solve QUBO with D-Wave
-    # response = solve_quantum_annealing(bqm=bqm, method=method, num_reads=num_reads)
+    while True:
+        try:
+            # Solve QUBO with D-Wave
+            response = solve_quantum_annealing(bqm=bqm, method=method, num_reads=num_reads)
 
-    # Solve QUBO with Simulated Annealing
-    response = solve_simulated_annealing(bqm=bqm, method=method, num_reads=num_reads)
+            # # Solve QUBO with Simulated Annealing
+            # response = solve_simulated_annealing(bqm=bqm, method=method, num_reads=num_reads)
+        except DisconnectedChainError:
+            continue
+        break
 
     # Analyze result
     report_file.write("## Result\n")

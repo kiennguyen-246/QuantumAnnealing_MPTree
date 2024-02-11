@@ -147,13 +147,16 @@ if __name__ == '__main__':
     for directory in os.listdir(ROOT + '/data_treebase'):
         if ".phy" not in directory:
             continue
-        # if directory <= "dna_M11113_344_9778.phy":
+        if directory >= "dna_M13718":
+            continue
+        # if directory in os.listdir(ROOT + '/output'):
         #     continue
-        if directory in os.listdir(ROOT + '/output'):
+        if directory[5] not in {'1', '2'}:
             continue
         print(directory)
         os.environ['PHYLO_FILE'] = directory
         input_seqs = SequenceReader.read_input_phy('data_treebase/' + directory)
+        # input_seqs = SequenceReader.read_input('sequences.inp')
         stat = SequenceReader.statistic_module(input_seqs)
         # print(input_seqs)
         terminals = input_seqs[:4]
