@@ -5,6 +5,7 @@ import time
 from dwave.system import EmbeddingComposite, FixedEmbeddingComposite
 from dwave.system.samplers import DWaveSampler
 from dwave.embedding.chain_strength import uniform_torque_compensation
+from minorminer.utils import DisconnectedChainError
 from neal import SimulatedAnnealingSampler
 import dwave.inspector
 
@@ -13,7 +14,7 @@ from src.export_embedding import get_embedding
 def solve_quantum_annealing(bqm,
                             method="?_",
                             num_reads=1000):
-    chain_strength_prefactor = 0.1
+    chain_strength_prefactor = 0.3
     annealing_time = 200
     anneal_schedule_id = -1
     chain_strength = uniform_torque_compensation(
@@ -35,7 +36,10 @@ def solve_quantum_annealing(bqm,
     with open(output_dir + embed_config + ".json", "r") as f:
         embedding = json.load(f)
     embedding = {int(k): v for k, v in embedding.items()}
-    sampler = FixedEmbeddingComposite(DWaveSampler(), embedding=embedding)
+    try:
+        sampler = FixedEmbeddingComposite(DWaveSampler(), embedding=embedding)
+    except DisconnectedChainError as e:
+        raise RuntimeError(e)
     # sampler = EmbeddingComposite(DWaveSampler())
 
     start = time.time()
