@@ -74,6 +74,7 @@ class FitchScorer:
         refine(self.modified_tree.get_tree_root())
 
     def print_difference(self):
+        no_difference = True  # Initialize a flag to track differences
         # Print any differences in mutation points between the original and modified trees
         if not self.modified_tree:
             raise ValueError("Call top_down_refinement before print_difference.")
@@ -84,6 +85,12 @@ class FitchScorer:
                 children2 = [child.name for child in node2.children]
                 if set(children1) != set(children2):
                     print(f"Difference in node {node1.name}: {children1} -> {children2}")
+                    no_difference = False  # Set the flag to False when a difference is found
+        if no_difference:
+            print("No differences in mutation points were found.")
+        else:
+            raise ValueError("Differences in mutation points were found.")
+
 
 
 class Node:
@@ -165,8 +172,11 @@ class NewickFormatter:
 
 
 # Example Usage
-for file in os.listdir('quantum_tree_output'):
-    file_path = os.path.join('quantum_tree_output', file)
+ROOT = os.path.dirname(os.path.abspath(__file__))
+for file in os.listdir(ROOT + '/../../quantum_tree_output'):
+    if ".phy" not in file:
+        continue
+    file_path = os.path.join(ROOT + '/../../quantum_tree_output', file)
     formatter = NewickFormatter(file_path)
     newick_tree = formatter.get_newick_tree()
 
