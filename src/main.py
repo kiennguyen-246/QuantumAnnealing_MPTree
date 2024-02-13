@@ -40,8 +40,8 @@ class SequenceReader:
 
                 for line in lines[1:]:
                     # Start from line 1, skipping line 0
-                    line = line.strip()
-                    line = line.split()
+                    line = line.strip() # \n
+                    line = line.split() # \t -> 2 string [0]: species, [1]: dna
                     seq_list.append(line[1])
 
         except FileNotFoundError as e:
@@ -60,7 +60,7 @@ class SequenceReader:
             counter = {'A': 0, 'T': 0, 'C': 0, 'G': 0, '-': 0}
 
             for seq in seq_list:
-                if seq[idx] in {'-', 'M', 'H', 'Y', 'R', 'S', 'W', 'K', 'B', 'D', 'V', 'N', '?'}:
+                if seq[idx] in {'-', 'M', 'H', 'Y', 'R', 'S'}:
                     counter['-'] += 1
                 else:
                     for item in ('A', 'T', 'C', 'G'):
@@ -110,7 +110,7 @@ class Triplet:
         for pos, pos_stat in zip(transposed_sequences, stat):
             idx+=1
             # Count the occurrences of each character at the current position (skip '-')
-            char_counts = Counter(filter(lambda x: x not in {'-', 'M', 'H', 'Y', 'R', 'S', 'W', 'K', 'B', 'D', 'V', 'N', '?'}, pos))
+            char_counts = Counter(filter(lambda x: x not in {'-', 'M', 'H', 'Y', 'R', 'S'}, pos))
 
             # If there is a tie, use the stat to select the highest accuracy nucleotide
             if char_counts:
@@ -144,26 +144,17 @@ if __name__ == '__main__':
     ROOT = os.getcwd()
     file_list = os.listdir(ROOT)
     # input_seqs = SequenceReader.read_input('sequences.inp')
-    # for directory in os.listdir(ROOT + '/data_treebase'):
-    for i in range(1):
-        # if ".phy" not in directory:
-        #     continue
-        # # if "4727" not in str(directory):
-        # #     continue
-        # if directory != "dna_M8692_395_3583.phy":
-        #     continue
-        # # if directory in os.listdir(ROOT + '/output'):
-        # #     continue
-        # # if directory[5] not in {'1', '2'}:
-        # #     continue
-        # print(directory)
-        # os.environ['PHYLO_FILE'] = directory
-        # input_seqs = SequenceReader.read_input_phy('data_treebase/' + directory)
-        os.environ['PHYLO_FILE'] = "sequences.inp"
-        input_seqs = SequenceReader.read_input('sequences.inp')
+    for directory in os.listdir(ROOT + '/data_treebase'):
+        if ".phy" not in directory:
+            continue
+        if directory < "dna_M1110_330_1711.phy":
+            continue
+        print(directory)
+        os.environ['PHYLO_FILE'] = directory
+        input_seqs = SequenceReader.read_input_phy('data_treebase/' + directory)
         stat = SequenceReader.statistic_module(input_seqs)
         # print(input_seqs)
-        terminals = input_seqs[:5]
+        terminals = input_seqs[:4]
         for idx, term in enumerate(terminals):
             print(f"{idx}) {term}")
         int_nodes = []
