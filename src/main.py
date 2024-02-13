@@ -3,6 +3,7 @@ import os
 from itertools import combinations
 import networkx as nx
 from makeGraph import getAns
+import numpy as np
 
 class SequenceReader:
     @staticmethod
@@ -145,6 +146,7 @@ if __name__ == '__main__':
     file_list = os.listdir(ROOT)
     # input_seqs = SequenceReader.read_input('sequences.inp')
     for directory in os.listdir(ROOT + '/data_treebase'):
+    # for i in range (0, 10000000000):
         if ".phy" not in directory:
             continue
         if directory < "dna_M1110_330_1711.phy":
@@ -154,9 +156,12 @@ if __name__ == '__main__':
         print(directory)
         os.environ['PHYLO_FILE'] = directory
         input_seqs = SequenceReader.read_input_phy('data_treebase/' + directory)
+
+        # os.environ['PHYLO_FILE'] = "sequences"
+        # input_seqs = SequenceReader.read_input('sequences.inp')
         stat = SequenceReader.statistic_module(input_seqs)
         # print(input_seqs)
-        terminals = input_seqs[:4]
+        terminals = input_seqs[:5]
         for idx, term in enumerate(terminals):
             print(f"{idx}) {term}")
         int_nodes = []
@@ -187,12 +192,15 @@ if __name__ == '__main__':
 
         print(ans)
 
-        tree_output_directory = ROOT + '/../quantum_tree_output/'
-        if not os.path.exists(tree_output_directory):
-            os.makedirs(tree_output_directory)
-        with open(tree_output_directory + os.getenv("PHYLO_FILE") + ".txt", "w") as f:
-            for edge in ans:
-                f.write(str(edge[0]) + " " + str(edge[1]) + " " + str(edge[2]) + "\n")
+        # tree_output_directory = ROOT + '/../quantum_tree_output/'
+        # if not os.path.exists(tree_output_directory):
+        #     os.makedirs(tree_output_directory)
+        # with open(tree_output_directory + os.getenv("PHYLO_FILE") + ".txt", "w") as f:
+        #     for edge in ans:
+        #         f.write(str(edge[0]) + " " + str(edge[1]) + " " + str(edge[2]) + "\n")
+        # sum_ans = np.sum([i[2] for i in ans])
+        # if sum_ans != 10:
+        #     raise ValueError("Sum of edges is not 10")
 
 
     # # Graph
