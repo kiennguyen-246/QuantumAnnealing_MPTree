@@ -1,0 +1,18 @@
+{
+    "ans": [
+        [
+            2,
+            3,
+            6
+        ],
+        [
+            3,
+            6,
+            2
+        ]
+    ],
+    "energy": 166.0,
+    "non_zero": 350,
+    "success_rate": 0,
+    "optimal_rate": 0
+}
