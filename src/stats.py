@@ -1,5 +1,7 @@
 import json
 import os
+import re
+import csv
 
 import numpy as np
 
@@ -49,6 +51,7 @@ def exp1():
             "N": [],
         },
     }
+    problem_sizes = []
     for directory in os.listdir(input_dir):
         if ".phy" not in directory:
             continue
@@ -78,6 +81,8 @@ def exp1():
                     if "chain_strength_prefactor" in n_dicts[0] and n_dicts[0]["chain_strength_prefactor"] != 0.3:
                         continue
             print(file)
+        problem_size = int(re.split("_", directory)[3].split(".")[0])
+        problem_sizes.append(problem_size)
         stats["num_vars"]["L"].append(l_dicts[0]["num_vars"])
         stats["num_vars"]["F"].append(f_dicts[0]["num_vars"])
         stats["num_vars"]["N"].append(n_dicts[0]["num_vars"])
@@ -201,6 +206,22 @@ def exp1():
     }
     with open(output_dir + "exp1.json", "w") as f:
         json.dump(ans1, f, indent=4)
+    with open(output_dir + "num_qubits.csv", "w") as f:
+        writer = csv.writer(f)
+        writer.writerow(["Problem Size", "#Qubits", "Formulation"])
+        for i in range(len(problem_sizes)):
+            writer.writerow([problem_sizes[i], stats["num_qubit"]["L"][i], "L"])
+            writer.writerow([problem_sizes[i], stats["num_qubit"]["F"][i], "F"])
+            writer.writerow([problem_sizes[i], stats["num_qubit"]["N"][i], "N"])
+    with open(output_dir + "success_rate.csv", "w") as f:
+        writer = csv.writer(f)
+        writer.writerow(["Problem Size", "%Sol", "Formulation"])
+        for i in range(len(problem_sizes)):
+            writer.writerow([problem_sizes[i], stats["success_rate"]["L"][i] * 100, "L"])
+            writer.writerow([problem_sizes[i], stats["success_rate"]["F"][i] * 100, "F"])
+            writer.writerow([problem_sizes[i], stats["success_rate"]["N"][i] * 100, "N"])
+
+
     #
     # df_array = [["L", "F", "N"]]
     # for key in stats["num_qubit"]:
