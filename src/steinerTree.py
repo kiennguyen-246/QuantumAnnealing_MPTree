@@ -8,6 +8,7 @@ from dwave.system.samplers import DWaveSampler
 from dwave.system.composites import LazyFixedEmbeddingComposite
 from dwave.embedding.chain_strength import uniform_torque_compensation
 from dimod.binary import BinaryQuadraticModel
+from minorminer.utils import DisconnectedChainError
 from neal import SimulatedAnnealingSampler
 import dwave.inspector
 
@@ -20,7 +21,7 @@ output_path = "output/"
 
 
 def lucas(g, terminals,
-          numReads=1000,
+          num_reads=1000,
           __lambda=1):
     """
     https://www.frontiersin.org/articles/10.3389/fphy.2014.00005/full
@@ -239,7 +240,17 @@ def lucas(g, terminals,
     # Solve QUBO with D-Wave
     bqm = BinaryQuadraticModel.from_qubo(q, offset)
     print("Number of non-zero elements in QUBO matrix: {}".format(len(q)))
-    response = solve_quantum_annealing(bqm=bqm, method=method, num_reads=numReads)
+    while True:
+        try:
+            # Solve QUBO with D-Wave
+            response = solve_quantum_annealing(bqm=bqm, method=method, num_reads=num_reads)
+
+            # # Solve QUBO with Simulated Annealing
+            # response = solve_simulated_annealing(bqm=bqm, method=method, num_reads=num_reads)
+        except RuntimeError as e:
+            print("Exception caught", e)
+            continue
+        break
 
     reportFile.write("## Result\n")
     reportTable(reportFile=reportFile, response=response)
@@ -302,8 +313,8 @@ def lucas(g, terminals,
         if (sample[get("ye", param1=u, param2=v)] == 1):
             print("({}, {})".format(u, v))
             ans.append((u, v, g[u][v]['weight']))
-    print("Steiner tree creation rate: {}/{}".format(success, numReads))
-    print("Optimal rate: {}/{}".format(optimal, numReads))
+    print("Steiner tree creation rate: {}/{}".format(success, num_reads))
+    print("Optimal rate: {}/{}".format(optimal, num_reads))
 
     print(ans)
 
@@ -525,11 +536,17 @@ def fowler(g, terminals, root=0,
     # print(var_map)
     # print(fixed_var_map)
 
-    # Solve QUBO with D-Wave
-    response = solve_quantum_annealing(bqm=bqm, method=method, num_reads=num_reads)
+    while True:
+        try:
+            # Solve QUBO with D-Wave
+            response = solve_quantum_annealing(bqm=bqm, method=method, num_reads=num_reads)
 
-    # # Solve QUBO with Simulated Annealing
-    # response = solve_simulated_annealing(bqm=bqm, method=method, num_reads=num_reads)
+            # # Solve QUBO with Simulated Annealing
+            # response = solve_simulated_annealing(bqm=bqm, method=method, num_reads=num_reads)
+        except RuntimeError as e:
+            print("Exception caught", e)
+            continue
+        break
 
     # Analyze result
     report_file.write("## Result\n")
@@ -901,11 +918,17 @@ def nghiem(g, terminals, root=0,
     # print(len(fixed_var_map))
     # print(fixed_var_map)
 
-    # # Solve QUBO with D-Wave
-    # response = solve_quantum_annealing(bqm=bqm, method=method, num_reads=num_reads)
+    while True:
+        try:
+            # Solve QUBO with D-Wave
+            response = solve_quantum_annealing(bqm=bqm, method=method, num_reads=num_reads)
 
-    # Solve QUBO with Simulated Annealing
-    response = solve_simulated_annealing(bqm=bqm, method=method, num_reads=num_reads)
+            # # Solve QUBO with Simulated Annealing
+            # response = solve_simulated_annealing(bqm=bqm, method=method, num_reads=num_reads)
+        except RuntimeError as e:
+            print("Exception caught", e)
+            continue
+        break
 
     # Analyze result
     report_file.write("## Result\n")

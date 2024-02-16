@@ -5,6 +5,7 @@ import time
 from dwave.system import EmbeddingComposite, FixedEmbeddingComposite
 from dwave.system.samplers import DWaveSampler
 from dwave.embedding.chain_strength import uniform_torque_compensation
+from minorminer.utils import DisconnectedChainError
 from neal import SimulatedAnnealingSampler
 import dwave.inspector
 
@@ -27,6 +28,7 @@ def solve_quantum_annealing(bqm,
         annealing_time)
     os.environ["SOLVER_CONFIG"] = solver_config
     data_name = os.getenv("PHYLO_FILE")
+    # data_name = ""
     output_dir = "output/" + data_name + "/"
     if not os.path.exists(output_dir):
         os.makedirs(output_dir)
@@ -34,7 +36,10 @@ def solve_quantum_annealing(bqm,
     with open(output_dir + embed_config + ".json", "r") as f:
         embedding = json.load(f)
     embedding = {int(k): v for k, v in embedding.items()}
-    sampler = FixedEmbeddingComposite(DWaveSampler(), embedding=embedding)
+    try:
+        sampler = FixedEmbeddingComposite(DWaveSampler(), embedding=embedding)
+    except DisconnectedChainError as e:
+        raise RuntimeError(e)
     # sampler = EmbeddingComposite(DWaveSampler())
 
     start = time.time()
@@ -69,6 +74,7 @@ def solve_quantum_annealing(bqm,
             "energy": response.record.energy[0],
             "chain_break_fraction": response.record.chain_break_fraction[0],
         },
+        "chain_strength_prefactor": chain_strength_prefactor,
         "chain_strength": chain_strength,
         "max_chain_length": max([len(chain) for chain in chains]),
         "timing_info": response.info["timing"],
