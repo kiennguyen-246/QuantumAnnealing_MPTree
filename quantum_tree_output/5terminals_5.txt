@@ -6,4 +6,7 @@ ATGAT AGGAT 1
 ATGAT CTGTA 3
 ATGAT ATGAG 1
 ATCAC ATCAT 1
+<<<<<<< HEAD
 
+=======
+>>>>>>> origin/bach
