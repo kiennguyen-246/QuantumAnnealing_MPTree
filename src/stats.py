@@ -30,6 +30,11 @@ def exp1():
             "F": [],
             "N": [],
         },
+        "avg_chain_length": {
+            "L": [],
+            "F": [],
+            "N": [],
+        },
         "max_chain_length": {
             "L": [],
             "F": [],
@@ -63,20 +68,43 @@ def exp1():
         l_dicts = [{}, {}]
         n_dicts = [{}, {}]
         for file in os.listdir(input_dir2):
-            if file[-7] != "_" or "json" not in file:
+            if "json" not in file:
                 continue
-            if "SA" in file:
+            if "SA" in file or "map" in file:
                 continue
-            file_type = int(file[-6]) - 1
+            file_type = 0
+            if file[-7] == "_":
+                file_type = int(file[-6]) - 1
             if file[0] == "L":
                 with open(input_dir2 + file, "r") as f:
-                    l_dicts[file_type] = json.load(f)
+                    if file[-7] != "_":
+                        embedding_config = json.load(f)
+                        avg_chain_length = np.mean([len(embedding_config[vertex]) for vertex in embedding_config])
+                        l_dicts[0]["avg_chain_length"] = avg_chain_length
+                    else:
+                        load = json.load(f)
+                        for key in load:
+                            l_dicts[file_type][key] = load[key]
             elif file[0] == "F":
                 with open(input_dir2 + file, "r") as f:
-                    f_dicts[file_type] = json.load(f)
+                    if file[-7] != "_":
+                        embedding_config = json.load(f)
+                        avg_chain_length = np.mean([len(embedding_config[vertex]) for vertex in embedding_config])
+                        f_dicts[0]["avg_chain_length"] = avg_chain_length
+                    else:
+                        load = json.load(f)
+                        for key in load:
+                            f_dicts[file_type][key] = load[key]
             else:
                 with open(input_dir2 + file, "r") as f:
-                    n_dicts[file_type] = json.load(f)
+                    if file[-7] != "_":
+                        embedding_config = json.load(f)
+                        avg_chain_length = np.mean([len(embedding_config[vertex]) for vertex in embedding_config])
+                        n_dicts[0]["avg_chain_length"] = avg_chain_length
+                    else:
+                        load = json.load(f)
+                        for key in load:
+                            n_dicts[file_type][key] = load[key]
                 if n_dicts[1] is not None:
                     if "chain_strength_prefactor" in n_dicts[0] and n_dicts[0]["chain_strength_prefactor"] != 0.3:
                         continue
@@ -92,6 +120,9 @@ def exp1():
         stats["non_zero"]["L"].append(l_dicts[1]["non_zero"])
         stats["non_zero"]["F"].append(f_dicts[1]["non_zero"])
         stats["non_zero"]["N"].append(n_dicts[1]["non_zero"])
+        stats["avg_chain_length"]["L"].append(l_dicts[0]["avg_chain_length"])
+        stats["avg_chain_length"]["F"].append(f_dicts[0]["avg_chain_length"])
+        stats["avg_chain_length"]["N"].append(n_dicts[0]["avg_chain_length"])
         stats["max_chain_length"]["L"].append(l_dicts[0]["max_chain_length"])
         stats["max_chain_length"]["F"].append(f_dicts[0]["max_chain_length"])
         stats["max_chain_length"]["N"].append(n_dicts[0]["max_chain_length"])
@@ -145,6 +176,20 @@ def exp1():
             "N": {
                 "mean": np.mean(stats["non_zero"]["N"]),
                 "std": np.std(stats["non_zero"]["N"]),
+            },
+        },
+        "avg_chain_length": {
+            "L": {
+                "mean": np.mean(stats["avg_chain_length"]["L"]),
+                "std": np.std(stats["avg_chain_length"]["L"]),
+            },
+            "F": {
+                "mean": np.mean(stats["avg_chain_length"]["F"]),
+                "std": np.std(stats["avg_chain_length"]["F"]),
+            },
+            "N": {
+                "mean": np.mean(stats["avg_chain_length"]["N"]),
+                "std": np.std(stats["avg_chain_length"]["N"]),
             },
         },
         "max_chain_length": {
