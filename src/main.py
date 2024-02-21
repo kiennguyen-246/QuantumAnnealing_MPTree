@@ -161,7 +161,7 @@ if __name__ == '__main__':
         # input_seqs = SequenceReader.read_input('sequences.inp')
         stat = SequenceReader.statistic_module(input_seqs)
         # print(input_seqs)
-        terminals = input_seqs[:5]
+        terminals = input_seqs[:4]
         for idx, term in enumerate(terminals):
             print(f"{idx}) {term}")
         int_nodes = []
@@ -192,13 +192,13 @@ if __name__ == '__main__':
 
         print(ans)
 
-        # tree_output_directory = ROOT + '/../quantum_tree_output/'
-        # if not os.path.exists(tree_output_directory):
-        #     os.makedirs(tree_output_directory)
-        # with open(tree_output_directory + os.getenv("PHYLO_FILE") + ".txt", "w") as f:
-        #     for edge in ans:
-        #         f.write(str(edge[0]) + " " + str(edge[1]) + " " + str(edge[2]) + "\n")
-        # sum_ans = np.sum([i[2] for i in ans])
+        tree_output_directory = ROOT + '/../quantum_tree_output/'
+        if not os.path.exists(tree_output_directory):
+            os.makedirs(tree_output_directory)
+        with open(tree_output_directory + os.getenv("PHYLO_FILE") + ".txt", "w") as f:
+            for edge in ans:
+                f.write(str(edge[0]) + " " + str(edge[1]) + " " + str(edge[2]) + "\n")
+        sum_ans = np.sum([i[2] for i in ans])
         # if sum_ans != 10:
         #     raise ValueError("Sum of edges is not 10")
 

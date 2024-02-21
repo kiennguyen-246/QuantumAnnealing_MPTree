@@ -106,7 +106,23 @@ def getAns(v_e_list=None,
 
     ans = ilp(g=g, terminals=terminals, root=root)["ans"]
 
+    # ans = [(0, 4, 3), (4, 5, 9), (5, 6, 4), (6, 2, 1), (6, 3, 7), (1, 5, 4)]
+
     print(ans)
+
+    steiner_graph = nx.Graph()
+    for edge in ans:
+        steiner_graph.add_edge(edge[0], edge[1], weight=edge[2])
+    for u in list(steiner_graph.nodes):
+        degree = steiner_graph.degree[u]
+        if degree == 2 and u not in terminals:
+            v1 = list(steiner_graph.adj[u])[0]
+            v2 = list(steiner_graph.adj[u])[1]
+            steiner_graph.add_edge(v1, v2, weight=steiner_graph[u][v1]['weight'] + steiner_graph[u][v2]['weight'])
+            steiner_graph.remove_edge(v1, u)
+            steiner_graph.remove_edge(v2, u)
+    ans = [(edge[0], edge[1], steiner_graph[edge[0]][edge[1]]['weight']) for edge in steiner_graph.edges]
+
     ans_edges = []
     for i in range(0, len(ans)):
         ans_edges.append((seqList[ans[i][0]], seqList[ans[i][1]], ans[i][2]))
