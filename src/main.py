@@ -144,23 +144,24 @@ if __name__ == '__main__':
     # New input for phylo file
     ROOT = os.getcwd()
     file_list = os.listdir(ROOT)
-    # input_seqs = SequenceReader.read_input('sequences.inp')
-    for directory in os.listdir(ROOT + '/data_treebase'):
-    # for i in range (0, 10000000000):
-        if ".phy" not in directory:
-            continue
-        if directory < "dna_M1110_330_1711.phy":
-            continue
+    input_seqs_all = SequenceReader.read_input('sequences.inp')
+    comb_id = 0
+    for (i1, i2, i3, i4) in combinations(input_seqs_all, 4):
+    # for directory in os.listdir(ROOT + '/data_treebase'):
+    #     if ".phy" not in directory:
+    #         continue
+    #     if directory < "dna_M1110_330_1711.phy":
+    #         continue
         # if directory[5] not in {'1', '2'}:
         #     continue
-        print(directory)
-        os.environ['PHYLO_FILE'] = directory
-        input_seqs = SequenceReader.read_input_phy('data_treebase/' + directory)
-
-        # os.environ['PHYLO_FILE'] = "sequences"
+        # print(directory)
+        # os.environ['PHYLO_FILE'] = directory
+        # input_seqs = SequenceReader.read_input_phy('data_treebase/' + directory)
+        comb_id += 1
+        os.environ['PHYLO_FILE'] = "sequences" + "_" + str(comb_id)
         # input_seqs = SequenceReader.read_input('sequences.inp')
+        input_seqs = [i1, i2, i3, i4]
         stat = SequenceReader.statistic_module(input_seqs)
-        # print(input_seqs)
         terminals = input_seqs[:4]
         for idx, term in enumerate(terminals):
             print(f"{idx}) {term}")

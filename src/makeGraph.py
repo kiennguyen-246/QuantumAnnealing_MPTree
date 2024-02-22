@@ -67,6 +67,11 @@ def makeGraph(v_e_list=None,
 
     print(len(g1.edges))
     print(len(g2.edges))
+    graph_size_dict = {
+        "graph_size": len(g2.edges)
+    }
+    with open(output_dir + "graph_size.json", "w") as f:
+        json.dump(graph_size_dict, f, indent=4)
     for u in terminals:
         print(u, nx.shortest_path_length(g1, root, u, "weight"))
     return {'graph': g2, 'terminals': terminals, 'root': root}

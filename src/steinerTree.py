@@ -1099,7 +1099,7 @@ def ilp(g, terminals, root=0):
 
     # Constraint 1
     for t in terminals:
-        for u in range(0, n):
+        for u in g.nodes:
             if u != t and u != root:
                 model.Equation(np.sum([get("f", t, u, v) for v in g.adj[u]])
                                == np.sum([get("f", t, v, u) for v in g.adj[u]]))

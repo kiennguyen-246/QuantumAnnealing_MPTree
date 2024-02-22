@@ -3,3 +3,4 @@ resources
 /src/test2.py
 tmp
 .idea
+steiner_dataset

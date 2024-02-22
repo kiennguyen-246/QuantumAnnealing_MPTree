@@ -72,6 +72,11 @@ def exp1():
                 continue
             if "SA" in file or "map" in file:
                 continue
+            if "graph_size" in file:
+                with open(input_dir2 + file, "r") as f:
+                    load = json.load(f)
+                    problem_sizes.append(load["graph_size"])
+                continue
             file_type = 0
             if file[-7] == "_":
                 file_type = int(file[-6]) - 1
@@ -109,8 +114,8 @@ def exp1():
                     if "chain_strength_prefactor" in n_dicts[0] and n_dicts[0]["chain_strength_prefactor"] != 0.3:
                         continue
             print(file)
-        problem_size = int(re.split("_", directory)[3].split(".")[0])
-        problem_sizes.append(problem_size)
+        # problem_size = int(re.split("_", directory)[3].split(".")[0])
+        # problem_sizes.append(problem_size)
         stats["num_vars"]["L"].append(l_dicts[0]["num_vars"])
         stats["num_vars"]["F"].append(f_dicts[0]["num_vars"])
         stats["num_vars"]["N"].append(n_dicts[0]["num_vars"])
@@ -364,7 +369,11 @@ def exp3():
             "SA": [],
             "QA": [],
         },
+        "avg_chain_length": {
+            "QA": [],
+        }
     }
+    problem_sizes = []
     for directory in os.listdir(input_dir):
         if ".phy" not in directory:
             continue
@@ -373,9 +382,14 @@ def exp3():
         sa_dicts = [{}, {}]
         qa_dicts = [{}, {}]
         for file in os.listdir(input_dir2):
+            if "graph_size" in file:
+                with open(input_dir2 + file, "r") as f:
+                    load = json.load(f)
+                    problem_sizes.append(load["graph_size"])
+                continue
             if file[0] != 'N':
                 continue
-            if file[-7] != "_" or "json" not in file:
+            if "json" not in file:
                 continue
             file_type = int(file[-6]) - 1
             if "SA" in file:
@@ -383,13 +397,21 @@ def exp3():
                     sa_dicts[file_type] = json.load(f)
             else:
                 with open(input_dir2 + file, "r") as f:
-                    qa_dicts[file_type] = json.load(f)
+                    if file[-7] != "_":
+                        embedding_config = json.load(f)
+                        avg_chain_length = np.mean([len(embedding_config[vertex]) for vertex in embedding_config])
+                        qa_dicts[0]["avg_chain_length"] = avg_chain_length
+                    else:
+                        load = json.load(f)
+                        for key in load:
+                            qa_dicts[file_type][key] = load[key]
                 if qa_dicts[1] is not None:
                     if "chain_strength_prefactor" in qa_dicts[0] and qa_dicts[0]["chain_strength_prefactor"] != 0.3:
                         continue
             print(file)
         stats["time_elapsed"]["SA"].append(sa_dicts[0]["time_elapsed"])
         stats["time_elapsed"]["QA"].append(qa_dicts[0]["time_elapsed"])
+        stats["avg_chain_length"]["QA"].append(qa_dicts[0]["avg_chain_length"])
         stats["success_rate"]["SA"].append(sa_dicts[1]["success_rate"] / 1000)
         stats["success_rate"]["QA"].append(qa_dicts[1]["success_rate"] / 1000)
         stats["optimal_rate"]["SA"].append(sa_dicts[1]["optimal_rate"] / 1000)
@@ -426,9 +448,17 @@ def exp3():
             },
         },
     }
+
     with open(output_dir + "exp3.json", "w") as f:
         json.dump(ans3, f, indent=4)
 
+    with open(output_dir + "success_rate_3.csv", "w") as f:
+        writer = csv.writer(f)
+        writer.writerow(["Problem Size", "%Sol", "Method", "Fit"])
+        for i in range(len(problem_sizes)):
+            writer.writerow([problem_sizes[i], stats["success_rate"]["QA"][i] * 100, "QA", (stats["avg_chain_length"]["QA"][i] < 1.2)])
+            writer.writerow([problem_sizes[i], stats["success_rate"]["SA"][i] * 100, "SA", True])
 
-exp1()
-# exp3()
+
+# exp1()
+exp3()
