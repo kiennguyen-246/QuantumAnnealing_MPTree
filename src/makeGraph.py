@@ -126,6 +126,8 @@ def getAns(v_e_list=None,
             steiner_graph.add_edge(v1, v2, weight=steiner_graph[u][v1]['weight'] + steiner_graph[u][v2]['weight'])
             steiner_graph.remove_edge(v1, u)
             steiner_graph.remove_edge(v2, u)
+        if degree != 1 and u in terminals:
+            steiner_graph.add_edge(u, u, weight=0)
     ans = [(edge[0], edge[1], steiner_graph[edge[0]][edge[1]]['weight']) for edge in steiner_graph.edges]
 
     ans_edges = []
