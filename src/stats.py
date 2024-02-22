@@ -258,6 +258,13 @@ def exp1():
             writer.writerow([problem_sizes[i], stats["num_qubit"]["L"][i], "L"])
             writer.writerow([problem_sizes[i], stats["num_qubit"]["F"][i], "F"])
             writer.writerow([problem_sizes[i], stats["num_qubit"]["N"][i], "N"])
+    with open(output_dir + "avg_chain_length.csv", "w") as f:
+        writer = csv.writer(f)
+        writer.writerow(["Problem Size", "ECLen", "Formulation"])
+        for i in range(len(problem_sizes)):
+            writer.writerow([problem_sizes[i], stats["avg_chain_length"]["L"][i], "L"])
+            writer.writerow([problem_sizes[i], stats["avg_chain_length"]["F"][i], "F"])
+            writer.writerow([problem_sizes[i], stats["avg_chain_length"]["N"][i], "N"])
     with open(output_dir + "success_rate.csv", "w") as f:
         writer = csv.writer(f)
         writer.writerow(["Problem Size", "%Sol", "Formulation"])
