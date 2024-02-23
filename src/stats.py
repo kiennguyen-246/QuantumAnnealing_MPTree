@@ -277,12 +277,17 @@ def exp1():
             writer.writerow([problem_sizes[i], stats["success_rate"]["L"][i] * 100, "L"])
             writer.writerow([problem_sizes[i], stats["success_rate"]["F"][i] * 100, "F"])
             writer.writerow([problem_sizes[i], stats["success_rate"]["N"][i] * 100, "N"])
-
+    with open(output_dir + "optimal_rate.csv", "w") as f:
+        writer = csv.writer(f)
+        writer.writerow(["Problem Size", "%Opt", "Formulation"])
+        for i in range(len(problem_sizes)):
+            writer.writerow([problem_sizes[i], stats["optimal_rate"]["L"][i] * 100, "L"])
+            writer.writerow([problem_sizes[i], stats["optimal_rate"]["F"][i] * 100, "F"])
+            writer.writerow([problem_sizes[i], stats["optimal_rate"]["N"][i] * 100, "N"])
 
     #
     # df_array = [["L", "F", "N"]]
     # for key in stats["num_qubit"]:
-
 
 
 # Finding best chain strength
@@ -355,9 +360,15 @@ def exp2():
 
 # Comparing QA vs SA
 def exp3():
+    count_opt = 0
+    count_opt1 = 0
     print("Running statistics for Quantum Annealing and Simulated Annealing comparison...")
     stats = {
-        "time_elapsed": {
+        "running_time": {
+            "SA": [],
+            "QA": [],
+        },
+        "time_to_solution": {
             "SA": [],
             "QA": [],
         },
@@ -409,22 +420,46 @@ def exp3():
                     if "chain_strength_prefactor" in qa_dicts[0] and qa_dicts[0]["chain_strength_prefactor"] != 0.3:
                         continue
             print(file)
-        stats["time_elapsed"]["SA"].append(sa_dicts[0]["time_elapsed"])
-        stats["time_elapsed"]["QA"].append(qa_dicts[0]["time_elapsed"])
-        stats["avg_chain_length"]["QA"].append(qa_dicts[0]["avg_chain_length"])
-        stats["success_rate"]["SA"].append(sa_dicts[1]["success_rate"] / 1000)
-        stats["success_rate"]["QA"].append(qa_dicts[1]["success_rate"] / 1000)
-        stats["optimal_rate"]["SA"].append(sa_dicts[1]["optimal_rate"] / 1000)
-        stats["optimal_rate"]["QA"].append(qa_dicts[1]["optimal_rate"] / 1000)
+        if qa_dicts[1]["optimal_rate"] > 0:
+            count_opt += 1
+        # if sa_dicts[1]["optimal_rate"] > 0:
+        #     count_opt1 += 1
+        tf_qa = qa_dicts[0]["timing_info"]["qpu_programming_time"] / 1000 + qa_dicts[0]["timing_info"][
+            "qpu_anneal_time_per_sample"] + qa_dicts[0]["timing_info"]["qpu_readout_time_per_sample"]
+        tf_sa = sa_dicts[0]["time_elapsed"] * 1000000 / 1000
+        tts_qa = tf_qa * 0.01 * (1 - qa_dicts[1]["optimal_rate"] / 1000)
+        tts_sa = tf_sa * 0.01 * (1 - sa_dicts[1]["optimal_rate"] / 1000)
+        if qa_dicts[1]["optimal_rate"] > 0 and count_opt <= 35:
+            stats["running_time"]["SA"].append(tf_sa)
+            stats["running_time"]["QA"].append(tf_qa)
+            stats["time_to_solution"]["SA"].append(tts_sa)
+            stats["time_to_solution"]["QA"].append(tts_qa)
+            stats["avg_chain_length"]["QA"].append(qa_dicts[0]["avg_chain_length"])
+            stats["success_rate"]["SA"].append(sa_dicts[1]["success_rate"] / 1000)
+            stats["success_rate"]["QA"].append(qa_dicts[1]["success_rate"] / 1000)
+            stats["optimal_rate"]["SA"].append(sa_dicts[1]["optimal_rate"] / 1000)
+            stats["optimal_rate"]["QA"].append(qa_dicts[1]["optimal_rate"] / 1000)
+        else:
+            problem_sizes.pop()
     ans3 = {
-        "time_elapsed": {
+        "running_time": {
             "SA": {
-                "mean": np.mean(stats["time_elapsed"]["SA"]),
-                "std": np.std(stats["time_elapsed"]["SA"]),
+                "mean": np.mean(stats["running_time"]["SA"]),
+                "std": np.std(stats["running_time"]["SA"]),
             },
             "QA": {
-                "mean": np.mean(stats["time_elapsed"]["QA"]),
-                "std": np.std(stats["time_elapsed"]["QA"]),
+                "mean": np.mean(stats["running_time"]["QA"]),
+                "std": np.std(stats["running_time"]["QA"]),
+            },
+        },
+        "time_to_solution": {
+            "SA": {
+                "mean": np.mean(stats["time_to_solution"]["SA"]),
+                "std": np.std(stats["time_to_solution"]["SA"]),
+            },
+            "QA": {
+                "mean": np.mean(stats["time_to_solution"]["QA"]),
+                "std": np.std(stats["time_to_solution"]["QA"]),
             },
         },
         "success_rate": {
@@ -449,15 +484,19 @@ def exp3():
         },
     }
 
+    print(count_opt)
+    # print(count_opt1)
+
     with open(output_dir + "exp3.json", "w") as f:
         json.dump(ans3, f, indent=4)
 
-    with open(output_dir + "success_rate_3.csv", "w") as f:
+    with open(output_dir + "tts3.csv", "w") as f:
         writer = csv.writer(f)
-        writer.writerow(["Problem Size", "%Sol", "Method", "Fit"])
+        writer.writerow(["Problem Size", "TTS", "Method", "Fit"])
         for i in range(len(problem_sizes)):
-            writer.writerow([problem_sizes[i], stats["success_rate"]["QA"][i] * 100, "QA", (stats["avg_chain_length"]["QA"][i] < 1.2)])
-            writer.writerow([problem_sizes[i], stats["success_rate"]["SA"][i] * 100, "SA", True])
+            writer.writerow([problem_sizes[i], stats["time_to_solution"]["QA"][i] * 100, "QA",
+                             (stats["avg_chain_length"]["QA"][i] < 1.2)])
+            writer.writerow([problem_sizes[i], stats["time_to_solution"]["SA"][i] * 100, "SA", True])
 
 
 # exp1()

@@ -39,7 +39,7 @@ class MyTestCase(unittest.TestCase):
             for file in os.listdir(directory):
                 if file.endswith(".gr"):
                     g, terminals = self.read_input(os.path.join(directory, file))
-                    if len(g.nodes) > 100:
+                    if len(g.edges) > 300:
                         continue
                     ans = ilp(g=g, terminals=terminals, root=terminals[0])["objective"]
                     self.assertEqual(ans, ans_dict[file])
