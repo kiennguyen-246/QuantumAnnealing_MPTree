@@ -146,21 +146,21 @@ if __name__ == '__main__':
     file_list = os.listdir(ROOT)
     input_seqs_all = SequenceReader.read_input('sequences.inp')
     comb_id = 0
-    # for (i1, i2, i3, i4) in combinations(input_seqs_all, 4):
-    for directory in os.listdir(ROOT + '/data_treebase'):
-        if ".phy" not in directory:
-            continue
-        # if directory < "dna_M1110_330_1711.phy":
-        #     continue
-        # if directory[5] not in {'1', '2'}:
-        #     continue
-        print(directory)
-        os.environ['PHYLO_FILE'] = directory
-        input_seqs = SequenceReader.read_input_phy('data_treebase/' + directory)
+    for (i1, i2, i3, i4) in combinations(input_seqs_all, 4):
+    # for directory in os.listdir(ROOT + '/data_treebase'):
+    #     if ".phy" not in directory:
+    #         continue
+    #     # if directory < "dna_M12388":
+    #     #    continue
+    #     # if directory[5] not in {'1', '2'}:
+    #     #     continue
+    #     print(directory)
+    #     os.environ['PHYLO_FILE'] = directory
+    #     input_seqs = SequenceReader.read_input_phy('data_treebase/' + directory)
         comb_id += 1
-        # os.environ['PHYLO_FILE'] = "sequences" + "_" + str(comb_id)
+        os.environ['PHYLO_FILE'] = "sequences" + "_" + str(comb_id)
         # input_seqs = SequenceReader.read_input('sequences.inp')
-        # input_seqs = [i1, i2, i3, i4]
+        input_seqs = [i1, i2, i3, i4]
         stat = SequenceReader.statistic_module(input_seqs)
         terminals = input_seqs[:4]
         for idx, term in enumerate(terminals):
@@ -193,15 +193,15 @@ if __name__ == '__main__':
 
         print(ans)
 
-        tree_output_directory = ROOT + '/../quantum_tree_output/'
-        if not os.path.exists(tree_output_directory):
-            os.makedirs(tree_output_directory)
-        with open(tree_output_directory + os.getenv("PHYLO_FILE") + ".txt", "w") as f:
-            for edge in ans:
-                f.write(str(edge[0]) + " " + str(edge[1]) + " " + str(edge[2]) + "\n")
-        sum_ans = np.sum([i[2] for i in ans])
-        # if sum_ans != 10:
-        #     raise ValueError("Sum of edges is not 10")
+        # tree_output_directory = ROOT + '/../quantum_tree_output/'
+        # if not os.path.exists(tree_output_directory):
+        #     os.makedirs(tree_output_directory)
+        # with open(tree_output_directory + os.getenv("PHYLO_FILE") + ".txt", "w") as f:
+        #     for edge in ans:
+        #         f.write(str(edge[0]) + " " + str(edge[1]) + " " + str(edge[2]) + "\n")
+        # sum_ans = np.sum([i[2] for i in ans])
+        # # if sum_ans != 10:
+        # #     raise ValueError("Sum of edges is not 10")
 
 
     # # Graph

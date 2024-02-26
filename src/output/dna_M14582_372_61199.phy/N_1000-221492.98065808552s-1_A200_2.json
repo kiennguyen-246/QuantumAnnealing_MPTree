@@ -13,18 +13,18 @@
         [
             7,
             6,
-            11967
+            16405
         ]
     ],
     "energy": 69759.0,
     "non_zero": 374,
-    "success_rate": 200,
-    "optimal_rate": 1,
+    "success_rate": 181,
+    "optimal_rate": 5,
     "satisfy_stats": [
-        944,
-        778,
-        914,
-        746,
-        504
+        960,
+        800,
+        955,
+        752,
+        468
     ]
 }

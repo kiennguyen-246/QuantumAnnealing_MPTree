@@ -920,12 +920,13 @@ def nghiem(g, terminals, root=0,
 
     while True:
         try:
-            # # Solve QUBO with D-Wave
-            # response = solve_quantum_annealing(bqm=bqm, method=method, num_reads=num_reads)
+            # Solve QUBO with D-Wave
+            response = solve_quantum_annealing(bqm=bqm, method=method, num_reads=num_reads)
 
-            # Solve QUBO with Simulated Annealing
-            response = solve_simulated_annealing(bqm=bqm, method=method, num_reads=num_reads)
-        except RuntimeError as e:
+            # # Solve QUBO with Simulated Annealing
+            # response = solve_simulated_annealing(bqm=bqm, method=method, num_reads=num_reads)
+        except Exception as e:
+        # except RuntimeError as e:
             print("Exception caught", e)
             continue
         break

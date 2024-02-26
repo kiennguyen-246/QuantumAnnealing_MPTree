@@ -9,22 +9,17 @@
             3,
             1,
             30896
-        ],
-        [
-            7,
-            6,
-            8793
         ]
     ],
     "energy": 69759.0,
     "non_zero": 374,
-    "success_rate": 140,
-    "optimal_rate": 3,
+    "success_rate": 120,
+    "optimal_rate": 5,
     "satisfy_stats": [
-        905,
-        669,
-        875,
-        713,
-        498
+        890,
+        604,
+        867,
+        653,
+        520
     ]
 }
