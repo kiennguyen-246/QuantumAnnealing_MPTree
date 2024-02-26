@@ -173,10 +173,10 @@ class NewickFormatter:
 
 # Example Usage
 ROOT = os.path.dirname(os.path.abspath(__file__))
-for file in os.listdir(ROOT + '/../../quantum_tree_output'):
-    if ".phy" not in file:
-        continue
-    file_path = os.path.join(ROOT + '/../../quantum_tree_output', file)
+for file in os.listdir(ROOT + '/../../quantum_tree_output/4_terms_out'):
+    # if ".phy" not in file:
+    #     continue
+    file_path = os.path.join(ROOT + '/../../quantum_tree_output/4_terms_out', file)
     formatter = NewickFormatter(file_path)
     newick_tree = formatter.get_newick_tree()
 
