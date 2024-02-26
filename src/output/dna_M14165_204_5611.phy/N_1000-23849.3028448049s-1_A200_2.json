@@ -18,13 +18,13 @@
     ],
     "energy": 5413.0,
     "non_zero": 293,
-    "success_rate": 347,
-    "optimal_rate": 9,
+    "success_rate": 189,
+    "optimal_rate": 3,
     "satisfy_stats": [
-        938,
-        681,
-        974,
-        780,
-        782
+        791,
+        685,
+        963,
+        773,
+        612
     ]
 }

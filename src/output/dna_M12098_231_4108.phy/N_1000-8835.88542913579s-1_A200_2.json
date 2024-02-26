@@ -12,19 +12,24 @@
         ],
         [
             2,
+            7,
+            1010
+        ],
+        [
+            7,
             1,
-            1530
+            912
         ]
     ],
-    "energy": 3241.0,
+    "energy": 3633.0,
     "non_zero": 425,
-    "success_rate": 71,
-    "optimal_rate": 2,
+    "success_rate": 122,
+    "optimal_rate": 0,
     "satisfy_stats": [
-        970,
-        716,
-        885,
-        267,
-        505
+        963,
+        759,
+        877,
+        395,
+        536
     ]
 }

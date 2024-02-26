@@ -1,0 +1,117 @@
+{
+    "config": "N_1000-4036.2001278430184s-1_A200",
+    "num_vars": 20,
+    "num_qubit": 24,
+    "time_elapsed": 0.030559539794921875,
+    "best_state": {
+        "sample": [
+            1,
+            1,
+            1,
+            0,
+            0,
+            0,
+            1,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            1,
+            1,
+            1
+        ],
+        "energy": 849.0,
+        "chain_break_fraction": 0.0
+    },
+    "chain_strength_prefactor": 0.4,
+    "chain_strength": 4036.2001278430184,
+    "max_chain_length": 2,
+    "timing_info": {
+        "qpu_sampling_time": 256100.0,
+        "qpu_anneal_time_per_sample": 200.0,
+        "qpu_readout_time_per_sample": 35.56,
+        "qpu_access_time": 272025.17,
+        "qpu_access_overhead_time": 1230.83,
+        "qpu_programming_time": 15925.17,
+        "qpu_delay_time_per_sample": 20.54,
+        "total_post_processing_time": 1.0,
+        "post_processing_overhead_time": 1.0
+    },
+    "embedding_info": {
+        "embedding": {
+            "9": [
+                3121,
+                376
+            ],
+            "10": [
+                3136
+            ],
+            "13": [
+                211
+            ],
+            "11": [
+                285,
+                3045
+            ],
+            "14": [
+                3151
+            ],
+            "12": [
+                240
+            ],
+            "15": [
+                3166
+            ],
+            "16": [
+                3195,
+                270
+            ],
+            "17": [
+                226,
+                3180
+            ],
+            "18": [
+                255
+            ],
+            "3": [
+                3256
+            ],
+            "4": [
+                3122
+            ],
+            "5": [
+                3090
+            ],
+            "6": [
+                3105
+            ],
+            "8": [
+                3075
+            ],
+            "0": [
+                450
+            ],
+            "1": [
+                3255
+            ],
+            "2": [
+                165
+            ],
+            "21": [
+                150
+            ],
+            "22": [
+                120
+            ]
+        },
+        "chain_break_method": "majority_vote",
+        "embedding_parameters": {},
+        "chain_strength": 4036.2001278430184
+    }
+}

@@ -67,6 +67,7 @@ def exp1():
         f_dicts = [{}, {}]
         l_dicts = [{}, {}]
         n_dicts = [{}, {}]
+        prefactor = 0
         for file in os.listdir(input_dir2):
             if "json" not in file:
                 continue
@@ -108,11 +109,16 @@ def exp1():
                         n_dicts[0]["avg_chain_length"] = avg_chain_length
                     else:
                         load = json.load(f)
-                        for key in load:
-                            n_dicts[file_type][key] = load[key]
-                if n_dicts[1] is not None:
-                    if "chain_strength_prefactor" in n_dicts[0] and n_dicts[0]["chain_strength_prefactor"] != 0.3:
-                        continue
+                        if "chain_strength_prefactor" in load:
+                            prefactor = load["chain_strength_prefactor"]
+                        if "timing_info" in load and "chain_strength_prefactor" not in load:
+                            prefactor = 0.3
+                        if prefactor == 0.3:
+                            for key in load:
+                                n_dicts[file_type][key] = load[key]
+                # if n_dicts[1] is not None:
+                #     if "chain_strength_prefactor" in n_dicts[0] and n_dicts[0]["chain_strength_prefactor"] != 0.3:
+                #         continue
             print(file)
         # problem_size = int(re.split("_", directory)[3].split(".")[0])
         # problem_sizes.append(problem_size)
@@ -298,19 +304,21 @@ def exp2():
         "success_rate": {},
         "optimal_rate": {},
     }
-    for prefactor in [0.1, 0.15, 0.2, 0.25, 0.3, 0.35, 0.4, 0.45, 0.5]:
+    # for prefactor in [0.1, 0.15, 0.2, 0.25, 0.3, 0.35, 0.4, 0.45, 0.5]:
+    for prefactor in [0.2, 0.25, 0.3, 0.35, 0.4]:
         stats["time_elapsed"][prefactor] = []
         stats["success_rate"][prefactor] = []
         stats["optimal_rate"][prefactor] = []
     for directory in os.listdir(input_dir):
         if ".phy" not in directory:
             continue
-        if directory[5] not in {'1', '2'}:
-            continue
+        # if directory[5] not in {'1', '2'}:
+        #     continue
         print(directory)
         input_dir2 = input_dir + directory + '/'
         test_stat_dict = {}
-        for prefactor in [0.1, 0.15, 0.2, 0.25, 0.3, 0.35, 0.4, 0.45, 0.5]:
+        # for prefactor in [0.1, 0.15, 0.2, 0.25, 0.3, 0.35, 0.4, 0.45, 0.5]:
+        for prefactor in [0.2, 0.25, 0.3, 0.35, 0.4]:
             test_stat_dict[prefactor] = [{}, {}]
         prefactor = 0
         for file in os.listdir(input_dir2):
@@ -323,9 +331,12 @@ def exp2():
                 continue
             with open(input_dir2 + file, "r") as f:
                 tmp = json.load(f)
-                if "chain_strength_prefactor" in tmp:
+                if "chain_strength_prefactor" in tmp and tmp["chain_strength_prefactor"] in [0.2, 0.25, 0.3, 0.35, 0.4]:
                     prefactor = tmp["chain_strength_prefactor"]
-                test_stat_dict[prefactor][file_type] = tmp
+                if "timing_info" in tmp and "chain_strength_prefactor" not in tmp:
+                    prefactor = 0.3
+                if prefactor in [0.2, 0.25, 0.3, 0.35, 0.4]:
+                    test_stat_dict[prefactor][file_type] = tmp
             print(file)
         for prefactor in test_stat_dict:
             time_elapsed = test_stat_dict[prefactor][0]["time_elapsed"]
@@ -414,11 +425,16 @@ def exp3():
                         qa_dicts[0]["avg_chain_length"] = avg_chain_length
                     else:
                         load = json.load(f)
-                        for key in load:
-                            qa_dicts[file_type][key] = load[key]
-                if qa_dicts[1] is not None:
-                    if "chain_strength_prefactor" in qa_dicts[0] and qa_dicts[0]["chain_strength_prefactor"] != 0.3:
-                        continue
+                        if "chain_strength_prefactor" in load:
+                            prefactor = load["chain_strength_prefactor"]
+                        if "timing_info" in load and "chain_strength_prefactor" not in load:
+                            prefactor = 0.3
+                        if prefactor == 0.3:
+                            for key in load:
+                                qa_dicts[file_type][key] = load[key]
+                # if qa_dicts[1] is not None:
+                #     if "chain_strength_prefactor" in qa_dicts[0] and qa_dicts[0]["chain_strength_prefactor"] != 0.3:
+                #         continue
             print(file)
         if qa_dicts[1]["optimal_rate"] > 0:
             count_opt += 1
@@ -430,6 +446,7 @@ def exp3():
         tts_qa = tf_qa * 0.01 * (1 - qa_dicts[1]["optimal_rate"] / 1000)
         tts_sa = tf_sa * 0.01 * (1 - sa_dicts[1]["optimal_rate"] / 1000)
         if qa_dicts[1]["optimal_rate"] > 0 and count_opt <= 35:
+        # if True:
             stats["running_time"]["SA"].append(tf_sa)
             stats["running_time"]["QA"].append(tf_qa)
             stats["time_to_solution"]["SA"].append(tts_sa)
@@ -495,9 +512,10 @@ def exp3():
         writer.writerow(["Problem Size", "TTS", "Method", "Fit"])
         for i in range(len(problem_sizes)):
             writer.writerow([problem_sizes[i], stats["time_to_solution"]["QA"][i] * 100, "QA",
-                             (stats["avg_chain_length"]["QA"][i] < 1.2)])
+                             (stats["avg_chain_length"]["QA"][i] < 1.7985475971671652)])
             writer.writerow([problem_sizes[i], stats["time_to_solution"]["SA"][i] * 100, "SA", True])
 
 
-# exp1()
+exp1()
+exp2()
 exp3()

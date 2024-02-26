@@ -2,7 +2,7 @@
     "config": "N_1000-221492.98065808552s-1_A200",
     "num_vars": 99,
     "num_qubit": 183,
-    "time_elapsed": 0.05356025695800781,
+    "time_elapsed": 0.023922204971313477,
     "best_state": {
         "sample": [
             0,
@@ -58,9 +58,9 @@
             1,
             1,
             0,
+            1,
             0,
-            0,
-            0,
+            1,
             0,
             0,
             1,
@@ -115,12 +115,12 @@
         "qpu_sampling_time": 291820.0,
         "qpu_anneal_time_per_sample": 200.0,
         "qpu_readout_time_per_sample": 71.28,
-        "qpu_access_time": 307746.37,
-        "qpu_access_overhead_time": 1574.63,
-        "qpu_programming_time": 15926.37,
+        "qpu_access_time": 307747.57,
+        "qpu_access_overhead_time": 978.43,
+        "qpu_programming_time": 15927.57,
         "qpu_delay_time_per_sample": 20.54,
-        "total_post_processing_time": 25.0,
-        "post_processing_overhead_time": 25.0
+        "total_post_processing_time": 1.0,
+        "post_processing_overhead_time": 1.0
     },
     "embedding_info": {
         "embedding": {

@@ -150,8 +150,8 @@ if __name__ == '__main__':
     for directory in os.listdir(ROOT + '/data_treebase'):
         if ".phy" not in directory:
             continue
-        # if directory < "dna_M1110_330_1711.phy":
-        #     continue
+        # if directory < "dna_M12388":
+        #    continue
         # if directory[5] not in {'1', '2'}:
         #     continue
         print(directory)
@@ -193,15 +193,15 @@ if __name__ == '__main__':
 
         print(ans)
 
-        tree_output_directory = ROOT + '/../quantum_tree_output/'
-        if not os.path.exists(tree_output_directory):
-            os.makedirs(tree_output_directory)
-        with open(tree_output_directory + os.getenv("PHYLO_FILE") + ".txt", "w") as f:
-            for edge in ans:
-                f.write(str(edge[0]) + " " + str(edge[1]) + " " + str(edge[2]) + "\n")
-        sum_ans = np.sum([i[2] for i in ans])
-        # if sum_ans != 10:
-        #     raise ValueError("Sum of edges is not 10")
+        # tree_output_directory = ROOT + '/../quantum_tree_output/'
+        # if not os.path.exists(tree_output_directory):
+        #     os.makedirs(tree_output_directory)
+        # with open(tree_output_directory + os.getenv("PHYLO_FILE") + ".txt", "w") as f:
+        #     for edge in ans:
+        #         f.write(str(edge[0]) + " " + str(edge[1]) + " " + str(edge[2]) + "\n")
+        # sum_ans = np.sum([i[2] for i in ans])
+        # # if sum_ans != 10:
+        # #     raise ValueError("Sum of edges is not 10")
 
 
     # # Graph
