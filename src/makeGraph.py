@@ -102,14 +102,14 @@ def getAns(v_e_list=None,
     # ans = lucas(g=g, terminals=terminals,
     #              __lambda=max([g[u][v]['weight'] for (u, v) in g.edges]) + 1,
     #              )["ans"]
-    # ans = fowler(g=g, terminals=terminals, root=root,
-    #              __lambda=len(g.nodes) * max([g[u][v]['weight'] for (u, v) in g.edges]) + 1,
-    #              )["ans"]
+    ans = fowler(g=g, terminals=terminals, root=root,
+                 __lambda=len(g.nodes) * max([g[u][v]['weight'] for (u, v) in g.edges]) + 1,
+                 )["ans"]
     # ans = nghiem(g=g, terminals=terminals, root=root,
     #              __lambda=len(g.nodes) * max([g[u][v]['weight'] for (u, v) in g.edges]) + 1,
     #              )["ans"]
 
-    ans = ilp(g=g, terminals=terminals, root=root)["ans"]
+    # ans = ilp(g=g, terminals=terminals, root=root)["ans"]
 
     # ans = [(0, 4, 3), (4, 5, 9), (5, 6, 4), (6, 2, 1), (6, 3, 7), (1, 5, 4)]
 

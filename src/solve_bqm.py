@@ -14,7 +14,7 @@ from src.export_embedding import get_embedding
 def solve_quantum_annealing(bqm,
                             method="?_",
                             num_reads=1000):
-    chain_strength_prefactor = 0.3
+    chain_strength_prefactor = 0.25
     annealing_time = 200
     anneal_schedule_id = -1
     chain_strength = uniform_torque_compensation(
