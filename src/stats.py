@@ -113,7 +113,7 @@ def exp1():
                             prefactor = load["chain_strength_prefactor"]
                         if "timing_info" in load and "chain_strength_prefactor" not in load:
                             prefactor = 0.3
-                        if prefactor == 0.3:
+                        if prefactor == 0.25:
                             for key in load:
                                 n_dicts[file_type][key] = load[key]
                 # if n_dicts[1] is not None:
@@ -429,7 +429,7 @@ def exp3():
                             prefactor = load["chain_strength_prefactor"]
                         if "timing_info" in load and "chain_strength_prefactor" not in load:
                             prefactor = 0.3
-                        if prefactor == 0.3:
+                        if prefactor == 0.25:
                             for key in load:
                                 qa_dicts[file_type][key] = load[key]
                 # if qa_dicts[1] is not None:
@@ -445,7 +445,7 @@ def exp3():
         tf_sa = sa_dicts[0]["time_elapsed"] * 1000000 / 1000
         tts_qa = tf_qa * 0.01 * (1 - qa_dicts[1]["optimal_rate"] / 1000)
         tts_sa = tf_sa * 0.01 * (1 - sa_dicts[1]["optimal_rate"] / 1000)
-        if qa_dicts[1]["optimal_rate"] > 0 and count_opt <= 35:
+        if qa_dicts[1]["optimal_rate"] > 0 and count_opt <= 42:
         # if True:
             stats["running_time"]["SA"].append(tf_sa)
             stats["running_time"]["QA"].append(tf_qa)
